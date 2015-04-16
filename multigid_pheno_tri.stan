@@ -68,16 +68,16 @@ data {
 
 parameters {
   
-  real theta1; //Phenology model parameters
-  real theta2;  
-  real theta3;
+  real tmin; //Phenology model parameters
+  real topt;  
+  real tmax;
 
-  real<lower=0> tth_resid;      //Residual variance
-  real<lower=0> tthm_resid;      //Residual variance
+  real<lower=0> sigma_dth;      //Residual variance
+  real<lower=0> sigma_dtm;      //Residual variance
 
 
-  real tthpar[ngid];        //Genome specific tth value
-  real tthmpar[ngid];        //Genome specific tth value
+  real tth_g[ngid];        //Genome specific tth value
+  real tthm_g[ngid];        //Genome specific tth value
 
 
   real mu_tth;              //Mean of the tthpars
@@ -88,15 +88,15 @@ parameters {
 
 transformed parameters{
 
-  real mutth_g[nyears,ngid];
-  real muttm_g[nyears,ngid];
+  real dth_hat_g[nyears,ngid];
+  real dtm_hat_g[nyears,ngid];
   vector[2] mulk;
 
   for(l in 1:nyears){
     for(k in 1:ngid){ 
-      mulk <- stan_pheno(tavg[l], theta1, theta2, theta3, tthpar[k],tthmpar[k]);
-      mutth_g[l,k] <- mulk[1];
-      muttm_g[l,k] <- mulk[2];
+      mulk <- stan_pheno(tavg[l], tmin, topt, tmax, tth_g[k],tthm_g[k]);
+      dth_hat_g[l,k] <- mulk[1];
+      dtm_hat_g[l,k] <- mulk[2];
     }
   }
 
@@ -107,24 +107,24 @@ model {
   //Hierarchy structure for tth parameter
   mu_tth ~ uniform(tthLow,tthHigh);
   sig_tth ~ uniform(0,5);
-  tthpar ~ normal(mu_tth,sig_tth);
+  tth_g ~ normal(mu_tth,sig_tth);
 
   //Hierarchy structure for tthm parameter
   mu_tthm ~ uniform(tthmLow,tthmHigh);
   sig_tthm ~ uniform(0,5);
-  tthmpar ~ normal(mu_tthm,sig_tthm);
+  tthm_g ~ normal(mu_tthm,sig_tthm);
 
-  tth_resid ~ uniform(0,10);
-  tthm_resid ~ uniform(0,10);
+  sigma_dth ~ uniform(0,10);
+  sigma_dtm ~ uniform(0,10);
 
-  theta1 ~ uniform(tlower[1],tupper[1]);
-  theta2 ~ uniform(tlower[2],tupper[2]);
-  theta3 ~ uniform(tlower[3],tupper[3]);
+  tmin ~ uniform(tlower[1],tupper[1]);
+  topt ~ uniform(tlower[2],tupper[2]);
+  tmax ~ uniform(tlower[3],tupper[3]);
   
   for(l in 1:nyears){
     for(n in 1:ngid){
-      obs_dth[l,n] ~ normal(mutth_g[l,n],tth_resid);
-      obs_dtm[l,n] ~ normal(muttm_g[l,n],tthm_resid);
+      obs_dth[l,n] ~ normal(dth_hat_g[l,n],sigma_dth);
+      obs_dtm[l,n] ~ normal(dtm_hat_g[l,n],sigma_dtm);
     }
   }
 
