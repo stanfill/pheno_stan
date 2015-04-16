@@ -19,7 +19,7 @@ initial <- function(){
   list(theta1=-5,theta2=30,theta3=35,sigma=3)
 }
 
-first_fit <- stan(file="first_pheno_tri.stan",data=pheno_dat,init=initial,iter=1000,chains=1)
+first_fit <- stan(file="Simple/first_pheno_tri.stan",data=pheno_dat,init=initial,iter=1000,chains=1)
 first_fit
 plot(first_fit)
 
@@ -35,7 +35,7 @@ initial_gid <- function(){
   list(theta1=0,theta2=25,theta3=35,sigma=3,tthpar=950)
 }
 
-oneGID_fit <- stan(file="gid_pheno_tri.stan",data=pheno_dat_gid,init=initial_gid,iter=1000,chains=1)
+oneGID_fit <- stan(file="Simple/gid_pheno_tri.stan",data=pheno_dat_gid,init=initial_gid,iter=1000,chains=1)
 oneGID_fit
 plot(oneGID_fit)
 traceplot(oneGID_fit)
@@ -52,7 +52,7 @@ initial_gid_trap <- function(){
   list(theta1=0,theta2=23,theta3=27,theta4=35,sigma=3,tthpar=950)
 }
 
-oneGID_trap_fit <- stan(file="gid_pheno_trap.stan",data=pheno_dat_gid_trap,
+oneGID_trap_fit <- stan(file="Simple/gid_pheno_trap.stan",data=pheno_dat_gid_trap,
                         init=initial_gid_trap,iter=1000,chains=1)
 oneGID_trap_fit
 plot(oneGID_trap_fit)
@@ -70,7 +70,7 @@ initial_gid_wang <- function(){
   list(theta1=0,theta2=23,theta3=35,sigma=3,tthpar=950)
 }
 
-oneGID_wang_fit <- stan(file="gid_pheno_wang.stan",data=pheno_dat_gid_wang,
+oneGID_wang_fit <- stan(file="Simple/gid_pheno_wang.stan",data=pheno_dat_gid_wang,
                         init=initial_gid_wang,iter=1000,chains=1)
 
 oneGID_wang_fit

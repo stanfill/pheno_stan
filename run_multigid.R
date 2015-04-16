@@ -39,7 +39,7 @@ initial_multigid <- function(){
 }
 
 multiGID_fit <- stan(file="multigid_pheno_tri.stan",data=pheno_dat_gid,
-                     init=initial_multigid,iter=250,chains=1)
+                     init=initial_multigid,iter=5000,chains=4)
 
 multiGID_fit
 plot(multiGID_fit)
