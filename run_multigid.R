@@ -32,9 +32,9 @@ dtmArray <- array(rep(0,120),c(2,2,30))
 dtmArray[1,,] <- matrix(temperate2011$dtm,nrow=2)
 dtmArray[2,,] <- matrix(heat2011$dtm,nrow=2)
 
-weatherMat <- matrix(c(tavg2011[1:500],havg2011[1:500]),nrow=2,byrow=TRUE)
-doyMat <- matrix(c(tdoy2011[1:500],hdoy2011[1:500]),nrow=2,byrow=TRUE)
-tMaxMat <- matrix(c(tmax2011[1:500],hmax2011[1:500]),nrow=2,byrow=TRUE)
+weatherMat <- matrix(c(tavg2011[1:700],havg2011[1:700]),nrow=2,byrow=TRUE)
+doyMat <- matrix(c(tdoy2011[1:700],hdoy2011[1:700]),nrow=2,byrow=TRUE)
+tMaxMat <- matrix(c(tmax2011[1:700],hmax2011[1:700]),nrow=2,byrow=TRUE)
 
 
 pheno_dat_gid <- list(ndays=ncol(weatherMat), nobs=dim(dthArray)[3],ngid=nrow(dthArray),nyears=2,
@@ -50,23 +50,10 @@ initial_multigid <- function(){
        mu_tth=rnorm(1,950,1),sig_tth=abs(rnorm(1,3,1)),mu_tthm=rnorm(1,950,1),sig_tthm=abs(rnorm(1,3,1)))
 }
 
-multiGID_fit <- stan(file="multigid_pheno_tri2.stan",data=pheno_dat_gid,
-                     init=initial_multigid,iter=1000,chains=2)
+multiGID_fit <- stan(file="multigid_pheno_wang.stan",data=pheno_dat_gid,
+                     init=initial_multigid,iter=5000,chains=2)
 
 multiGID_fit
 plot(multiGID_fit)
 traceplot(multiGID_fit)
 
-
-####################
-#Wang-engel phenology model
-
-multiGID_fit_wang <- stan(file="multigid_pheno_wang.stan",data=pheno_dat_gid,
-                     init=initial_multigid,iter=1000,chains=1)
-
-multiGID_fit_wang2 <- stan(fit=multiGID_fit_wang,data=pheno_dat_gid,
-     init=initial_multigid,iter=2500,chains=5)
-
-multiGID_fit_wang2
-plot(multiGID_fit_wang2)
-traceplot(multiGID_fit_wang2)
