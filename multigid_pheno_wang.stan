@@ -22,6 +22,24 @@ functions{
 
   }
 
+  real wang_pheno(real temp,real tbase,real topt,real tmax){
+
+    real a;
+    real denom;
+    real ttdaily;
+  
+    //Constants used in fitting the Wang function
+    a  <-  log(2) / log((tmax - tbase) / (topt - tbase));
+    denom <- pow(topt - tbase,2*a);
+      
+    //This is the Wang (curved) phenology model
+    ttdaily <- (2*pow(temp - tbase,a)*pow(topt - tbase,a) - pow(temp - tbase,2*a)) / denom;
+    ttdaily <- if_else(temp<tbase||temp>tmax,0,ttdaily*topt);
+
+    return ttdaily;
+      
+  }
+
   vector stan_pheno(row_vector tavg, row_vector doy, real tbase, real topt, real tmax, real tth, real tthm){
     
     real ttcumadj;
@@ -30,8 +48,7 @@ functions{
     vector[2] daysto;
     real ttdaily;
     real ttm;
-    real a;
-    real denom;
+
     real ppsen;
     real dayl_fac;
 
@@ -42,10 +59,6 @@ functions{
     daysto[1] <- 0.0;
     daysto[2] <- 0.0;
 
-    //Constants used in fitting the Wang function
-    a  <-  log(2) / log((tmax - tbase) / (topt - tbase));
-    denom <- pow(topt - tbase,2*a);
-
     i <- 1;
 
     while(ttcumadj<ttm){
@@ -53,10 +66,9 @@ functions{
       daysto[1] <- if_else(ttcumadj<tth,daysto[1]+1.0,daysto[1]);
       daysto[2] <- daysto[2]+1.0;
 
-      //This is the Wang (curved) phenology model
-      ttdaily <- (2*pow(tavg[i] - tbase,a)*pow(topt - tbase,a) - pow(tavg[i] - tbase,2*a)) / denom;
-      ttdaily <- if_else(tavg[i]<tbase||tavg[i]>tmax,0,ttdaily*topt);
-      
+
+      ttdaily <- wang_pheno(tavg[i],tbase,topt,tmax);
+
       //Calculate day lengt factor at lat=27.37177, ppsen=70
       //dayl_fac <- if_else(ttcumadj<tth,calc_dayl_fac(27.37177, doy[i], ppsen),1);
       dayl_fac <- calc_dayl_fac(27.37177, doy[i], ppsen);

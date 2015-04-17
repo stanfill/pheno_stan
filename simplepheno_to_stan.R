@@ -149,6 +149,44 @@ for(i in 1:length(doy)){
   dayl_fac[i] = 1 - ppsen/10000 * (20 - dayl)^2
   
 }
+
+#####################
+#Vernelasation sensitivity adjustment
+
+id <- weather_temperate_2011
+tavg <- (id$tmin+id$tmax)/2
+pbase <- -5; popt <- 7; pmax <- 15
+
+vrn.fac = triangular(tavg,pbase,popt,pmax)
+de.vrn = rep(0, length(id$tmax))
+de.vrn[id$tmax > 30] = (id$tmax[id$tmax > 30] - 30) *   0.5
+
+de.vrn[de.vrn > vrn.fac] = vrn.fac[de.vrn > vrn.fac]
+ind = cumsum(vrn.fac - de.vrn) < 10
+vrn.fac[ind] = vrn.fac[ind] - de.vrn[ind]
+cum.vrn = cumsum(vrn.fac)
+vrn.fac = cum.vrn/p$vreq
+vrn.fac[vrn.fac > 1] = 1
+vrn.fac[vrn.fac < 0] = 0
+
+#My stan friendly version
+
+de.vrn = rep(0, length(tmax))
+
+for(i in 1:length(doy)){
+  vrn.fac = triangular(tavg,pbase,popt,pmax)
+
+  de.vrn[id$tmax > 30] = (id$tmax[id$tmax > 30] - 30) *   0.5
+  
+  de.vrn[de.vrn > vrn.fac] = vrn.fac[de.vrn > vrn.fac]
+  ind = cumsum(vrn.fac - de.vrn) < 10
+  vrn.fac[ind] = vrn.fac[ind] - de.vrn[ind]
+  cum.vrn = cumsum(vrn.fac)
+  vrn.fac = cum.vrn/p$vreq
+  vrn.fac[vrn.fac > 1] = 1
+  vrn.fac[vrn.fac < 0] = 0
+  
+}
 ################
 #His Wheat Phenology function ignoring , from the "simplepheno" package
 red_pheno <-function(tavg,doy,t.base,t.opt,t.max,tt.h,tt.hm){
