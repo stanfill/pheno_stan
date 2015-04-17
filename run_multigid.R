@@ -50,7 +50,7 @@ initial_multigid <- function(){
        mu_tth=rnorm(1,950,1),sig_tth=abs(rnorm(1,3,1)),mu_tthm=rnorm(1,950,1),sig_tthm=abs(rnorm(1,3,1)))
 }
 
-multiGID_fit <- stan(file="multigid_pheno_wang.stan",data=pheno_dat_gid,
+multiGID_fit <- stan(file="multigid_pheno_tri2.stan",data=pheno_dat_gid,
                      init=initial_multigid,iter=1000,chains=2)
 
 multiGID_fit
