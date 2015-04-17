@@ -111,12 +111,51 @@ stan_wang <-function(temp,tbase,topt,tmax){
 
 wang_engel(temp,t.base,t.opt,t.max)-stan_wang(temp,tbase,topt,tmax)
 
+#####################
+#Daylength adjustment factor
+
+id <- weather_temperate_2011
+p <- list(ppsen=70)
+
+##His function
+doy = as.POSIXlt(id$date)$yday + 1
+
+ppsen_fun <- function(doy,lat,ppsen){
+  
+  s1 = sin(lat * 0.01745)
+  c1 = cos(lat * 0.01745)
+  dec = 0.4093 * sin(0.0172 * (doy - 82.2))
+  dlv = ((-s1 * sin(dec) - 0.1047)/(c1 * cos(dec)))
+  dlv[dlv < -0.87] = -0.87
+  dayl = 7.639 * acos(dlv)
+  dayl.fac = 1 - ppsen/10000 * (20 - dayl)^2
+  
+  return(dayl.fac)
+}
+#My stan friendly version
+ppsen <- 70
+doy  <-  as.POSIXlt(id$date)$yday + 1
+dayl_fac <- rep(0,length(doy))
+lat <- id$lat
+  
+for(i in 1:length(doy)){
+  s1 = sin(lat * 0.01745)
+  c1 = cos(lat * 0.01745)
+  dec = 0.4093 * sin(0.0172 * (doy[i] - 82.2))
+  dlv = ((-s1 * sin(dec) - 0.1047)/(c1 * cos(dec)))
+  dlv <- if_else(dlv< -0.87,-0.87,dlv)
+
+  dayl = 7.639 * acos(dlv)
+  dayl_fac[i] = 1 - ppsen/10000 * (20 - dayl)^2
+  
+}
 ################
 #His Wheat Phenology function ignoring , from the "simplepheno" package
-red_pheno <-function(tavg,t.base,t.opt,t.max,tt.h,tt.hm){
+red_pheno <-function(tavg,doy,t.base,t.opt,t.max,tt.h,tt.hm){
     
     tt.daily = triangular(tavg,t.base,t.opt,t.max)*t.opt   
-    tt.cum.adj = cumsum(tt.daily)
+    dayl_fac <- ppsen_fun(doy,27.37177,70)
+    tt.cum.adj = cumsum(tt.daily*dayl_fac)
     
     # Calculate days from sowing/germination to heading    
     dth = (1:length(tt.cum.adj))[tt.cum.adj>tt.h][1]
@@ -156,5 +195,7 @@ data(p_triangular)
 obstavg <- (weather_temperate_2011$tmin+weather_temperate_2011$tmax)/2
 obsp <- list(base=0,opt=26,max=34)
 
-red_pheno(obstavg,0,26,34,tt.h=850,tt.hm=900)
+doy_2011 <- as.POSIXlt(weather_temperate_2011$date)$yday+1
+red_pheno(obstavg,doy_2011,0,26,34,tt.h=850,tt.hm=900)
+
 stan_pheno(obstavg,0,25,30,tt.h=850,tt.hm=900)
