@@ -8,6 +8,9 @@ data(phenology_temperate_2011);data(phenology_heat_2011)
 
 tavg2011 <- (weather_temperate_2011$tmin+weather_temperate_2011$tmax)/2
 havg2011 <- (weather_heat_2011$tmin+weather_heat_2011$tmax)/2
+tmax2011 <- weather_temperate_2011$tmax
+hmax2011 <- weather_heat_2011$tmax
+
 temperate2011 <- phenology_temperate_2011
 heat2011 <- phenology_heat_2011
 
@@ -30,11 +33,13 @@ dtmArray[1,,] <- matrix(temperate2011$dtm,nrow=2)
 dtmArray[2,,] <- matrix(heat2011$dtm,nrow=2)
 
 weatherMat <- matrix(c(tavg2011[1:500],havg2011[1:500]),nrow=2,byrow=TRUE)
-
 doyMat <- matrix(c(tdoy2011[1:500],hdoy2011[1:500]),nrow=2,byrow=TRUE)
+tMaxMat <- matrix(c(tmax2011[1:500],hmax2011[1:500]),nrow=2,byrow=TRUE)
+
 
 pheno_dat_gid <- list(ndays=ncol(weatherMat), nobs=dim(dthArray)[3],ngid=nrow(dthArray),nyears=2,
-                      tavg=weatherMat, doy = doyMat, obs_dth=dthArray, obs_dtm=dtmArray,
+                      obs_tavg=weatherMat, doy = doyMat, obs_tmax=tMaxMat,
+                      obs_dth=dthArray, obs_dtm=dtmArray,
                       tthLow=925, tthHigh=1375,tthmLow=925, tthmHigh=1375,
                       tlower=c(-5,20,30), tupper=c(5,30,50))
 
@@ -46,7 +51,7 @@ initial_multigid <- function(){
 }
 
 multiGID_fit <- stan(file="multigid_pheno_wang.stan",data=pheno_dat_gid,
-                     init=initial_multigid,iter=1000,chains=1)
+                     init=initial_multigid,iter=1000,chains=2)
 
 multiGID_fit
 plot(multiGID_fit)

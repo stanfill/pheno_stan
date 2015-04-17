@@ -156,35 +156,39 @@ for(i in 1:length(doy)){
 id <- weather_temperate_2011
 tavg <- (id$tmin+id$tmax)/2
 pbase <- -5; popt <- 7; pmax <- 15
+tmax <- id$tmax
 
+final_vrn_fac  <-  rep(0, length(tmax))
+sum_vrn_fac <- sum_diff <- 0
+
+#His vern function
 vrn.fac = triangular(tavg,pbase,popt,pmax)
-de.vrn = rep(0, length(id$tmax))
-de.vrn[id$tmax > 30] = (id$tmax[id$tmax > 30] - 30) *   0.5
+de.vrn = rep(0, length(tmax))
+de.vrn[id$tmax > 30] = (tmax[tmax > 30] - 30) *   0.5
 
 de.vrn[de.vrn > vrn.fac] = vrn.fac[de.vrn > vrn.fac]
 ind = cumsum(vrn.fac - de.vrn) < 10
 vrn.fac[ind] = vrn.fac[ind] - de.vrn[ind]
 cum.vrn = cumsum(vrn.fac)
-vrn.fac = cum.vrn/p$vreq
+vrn.fac = cum.vrn/1
 vrn.fac[vrn.fac > 1] = 1
 vrn.fac[vrn.fac < 0] = 0
 
 #My stan friendly version
-
-de.vrn = rep(0, length(tmax))
-
-for(i in 1:length(doy)){
-  vrn.fac = triangular(tavg,pbase,popt,pmax)
-
-  de.vrn[id$tmax > 30] = (id$tmax[id$tmax > 30] - 30) *   0.5
+for(i in 1:length(tavg)){
   
-  de.vrn[de.vrn > vrn.fac] = vrn.fac[de.vrn > vrn.fac]
-  ind = cumsum(vrn.fac - de.vrn) < 10
-  vrn.fac[ind] = vrn.fac[ind] - de.vrn[ind]
-  cum.vrn = cumsum(vrn.fac)
-  vrn.fac = cum.vrn/p$vreq
-  vrn.fac[vrn.fac > 1] = 1
-  vrn.fac[vrn.fac < 0] = 0
+  vrn_fac <-  triangular(tavg[i],pbase,popt,pmax);
+  de_vrn <- if_else(tmax[i] > 30,(tmax[i] - 30)/2,0)
+  
+  de_vrn <- if_else(de_vrn > vrn_fac,vrn_fac,de_vrn)
+  sum_diff <- sum_diff + vrn_fac - de_vrn
+  
+  vrn_fac <- if_else(sum_diff<10,vrn_fac - de_vrn,vrn_fac)
+  
+  sum_vrn_fac <- sum_vrn_fac + vrn_fac
+  vrn_fac <- max(min(sum_vrn_fac,1),0)
+  
+  final_vrn_fac[i] <- vrn_fac
   
 }
 ################

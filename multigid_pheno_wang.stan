@@ -22,7 +22,7 @@ functions{
 
   }
 
-  real wang_pheno(real temp,real tbase,real topt,real tmax){
+  real wang_pheno(real temp, real tbase, real topt, real tmax){
 
     real a;
     real denom;
@@ -40,7 +40,27 @@ functions{
       
   }
 
-  vector stan_pheno(row_vector tavg, row_vector doy, real tbase, real topt, real tmax, real tth, real tthm){
+  
+  real calc_vern_sens(real tavg, real obs_tmax, real pbase, real popt, real pmax){
+    //Calculate the vernalisation factor for a given day.  Vernalisation is cumulative
+    //so it needs to be added as it goes
+    real vrn_fac;
+    real de_vrn;
+    real sum_diff;
+    real sum_vrn_fac;
+    
+    vrn_fac <-  wang_pheno(tavg,pbase,popt,pmax);
+    de_vrn <- if_else(obs_tmax > 30,(obs_tmax - 30)/2,0);
+  
+    de_vrn <- if_else(de_vrn > vrn_fac,vrn_fac,de_vrn);
+    sum_diff <- sum_diff + vrn_fac - de_vrn;
+  
+    vrn_fac <- if_else(sum_diff<10,vrn_fac - de_vrn,vrn_fac);
+
+    return vrn_fac;  
+  }
+
+  vector stan_pheno(row_vector tavg, row_vector doy, row_vector obs_tmax, real tbase, real topt, real tmax, real tth, real tthm){
     
     real ttcumadj;
     real z;
@@ -51,7 +71,10 @@ functions{
 
     real ppsen;
     real dayl_fac;
+    real vern_fac;
+    real vf_i;
 
+    vern_fac <- 0.0;
     ppsen  <-  70.0;
     ttm <- tth+tthm;
 
@@ -66,13 +89,20 @@ functions{
       daysto[1] <- if_else(ttcumadj<tth,daysto[1]+1.0,daysto[1]);
       daysto[2] <- daysto[2]+1.0;
 
-
+      //Use the Wang phenology model to calculate day i thermal time
       ttdaily <- wang_pheno(tavg[i],tbase,topt,tmax);
 
       //Calculate day lengt factor at lat=27.37177, ppsen=70
       //dayl_fac <- if_else(ttcumadj<tth,calc_dayl_fac(27.37177, doy[i], ppsen),1);
       dayl_fac <- calc_dayl_fac(27.37177, doy[i], ppsen);
-      ttcumadj <- ttcumadj+ttdaily*dayl_fac;
+
+      //Calculate vernalisation factor with pbase=-5, popt=7 and pmax=15
+      vf_i <- calc_vern_sens(tavg[i], obs_tmax[i], -5.0, 7.0, 15.0);
+      vern_fac <- vern_fac+vf_i;
+      vern_fac <- if_else(vern_fac+vf_i>1,1,vern_fac);
+      vern_fac <- if_else(vern_fac+vf_i<0,0,vern_fac);
+
+      ttcumadj <- ttcumadj+ttdaily*dayl_fac*vern_fac;
 
       i <- i+1;
     }
@@ -91,8 +121,9 @@ data {
   int<lower=0> ngid;
   int<lower=0> nyears;
 
-  matrix[nyears,ndays] tavg;
+  matrix[nyears,ndays] obs_tavg;
   matrix[nyears,ndays] doy;
+  matrix[nyears,ndays] obs_tmax;
 
   real obs_dth[nyears,ngid,nobs];
   real obs_dtm[nyears,ngid,nobs];
@@ -134,7 +165,7 @@ transformed parameters{
 
   for(l in 1:nyears){
     for(k in 1:ngid){ 
-      mulk <- stan_pheno(tavg[l], doy[l], tmin, topt, tmax, tth_g[k],tthm_g[k]);
+      mulk <- stan_pheno(obs_tavg[l], doy[l], obs_tmax[l], tmin, topt, tmax, tth_g[k],tthm_g[k]);
       dth_hat_g[l,k] <- mulk[1];
       dtm_hat_g[l,k] <- mulk[2];
     }
