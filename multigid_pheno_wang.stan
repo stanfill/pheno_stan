@@ -164,21 +164,21 @@ model {
   vector[2] mulk;
 
   //Hierarchy structure for tth parameter
-  mu_tth ~ normal(tthLow,tthHigh) T[800,1400];
+  mu_tth ~ normal(tthLow,tthHigh) T[600,1200];
   sig_tth ~ uniform(0,5);
   tth_g ~ normal(mu_tth,sig_tth);
 
   //Hierarchy structure for tthm parameter
-  mu_tthm ~ normal(tthmLow,tthmHigh) T[800,1400]; 
+  mu_tthm ~ normal(tthmLow,tthmHigh) T[600,1200]; 
   sig_tthm ~ uniform(0,5);
   tthm_g ~ normal(mu_tthm,sig_tthm);              //Each tthm is assumed normal
 
-  sigma_dth ~ uniform(0,25);
-  sigma_dtm ~ uniform(0,25);
+  sigma_dth ~ uniform(0,40);
+  sigma_dtm ~ uniform(0,40);
 
   tmin ~ normal(tlower[1],tupper[1]) T[-5,5];
   topt ~ normal(tlower[2],tupper[2]) T[20,30];
-  tmax ~ normal(tlower[3],tupper[3]) T[30,50];
+  tmax ~ normal(tlower[3],tupper[3]) T[30,70];
   
   for(l in 1:nyears){
     for(n in 1:ngid){
