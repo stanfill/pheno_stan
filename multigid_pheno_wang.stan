@@ -62,6 +62,7 @@ functions{
 
   vector stan_pheno(row_vector tavg, row_vector doy, row_vector obs_tmax, real tbase, real topt, real tmax, real tth, real tthm){
     
+    int n_obs;
     real ttcumadj;
     real z;
     int i;
@@ -69,13 +70,13 @@ functions{
     real ttdaily;
     real ttm;
 
-    real ppsen;
     real dayl_fac;
     real vern_fac;
     real vf_i;
 
+    n_obs <- num_elements(tavg); //To protect against going too far in tavg vector
+
     vern_fac <- 0.0;
-    ppsen  <-  70.0;
     ttm <- tth+tthm;
 
     ttcumadj <- 0.0;
@@ -84,7 +85,7 @@ functions{
 
     i <- 1;
 
-    while(ttcumadj<ttm){
+    while(ttcumadj<ttm && i<n_obs){
 
       daysto[1] <- if_else(ttcumadj<tth,daysto[1]+1.0,daysto[1]);
       daysto[2] <- daysto[2]+1.0;
@@ -93,8 +94,7 @@ functions{
       ttdaily <- wang_pheno(tavg[i],tbase,topt,tmax);
 
       //Calculate day lengt factor at lat=27.37177, ppsen=70
-      //dayl_fac <- if_else(ttcumadj<tth,calc_dayl_fac(27.37177, doy[i], ppsen),1);
-      dayl_fac <- calc_dayl_fac(27.37177, doy[i], ppsen);
+      dayl_fac <- calc_dayl_fac(27.37177, doy[i], 70.0);
 
       //Calculate vernalisation factor with pbase=-5, popt=7 and pmax=15
       vf_i <- calc_vern_sens(tavg[i], obs_tmax[i], -5.0, 7.0, 15.0);
@@ -106,7 +106,6 @@ functions{
 
       i <- i+1;
     }
-
 
     return daysto;
   
@@ -161,7 +160,7 @@ parameters {
 model {
 
   //I don't actually care about the current estimate of dth or dtm so make them 
-  //local variables that don't exist outside this for loop
+  //local variables that don't exist outside this code chunck
   vector[2] mulk;
 
   //Hierarchy structure for tth parameter
@@ -170,12 +169,12 @@ model {
   tth_g ~ normal(mu_tth,sig_tth);
 
   //Hierarchy structure for tthm parameter
-  mu_tthm ~ normal(tthmLow,tthmHigh) T[800,1400]; //Mean of all tthm parameters
+  mu_tthm ~ normal(tthmLow,tthmHigh) T[800,1400]; 
   sig_tthm ~ uniform(0,5);
   tthm_g ~ normal(mu_tthm,sig_tthm);              //Each tthm is assumed normal
 
-  sigma_dth ~ uniform(0,50);
-  sigma_dtm ~ uniform(0,50);
+  sigma_dth ~ uniform(0,25);
+  sigma_dtm ~ uniform(0,25);
 
   tmin ~ normal(tlower[1],tupper[1]) T[-5,5];
   topt ~ normal(tlower[2],tupper[2]) T[20,30];

@@ -63,14 +63,15 @@ pheno_dat_gid <- list(ndays=ncol(weatherMat), nobs=dim(dthArray)[3],ngid=dim(dth
                       nyears=nrow(weatherMat),
                       obs_tavg=weatherMat, doy = doyMat, obs_tmax=tMaxMat,
                       obs_dth=dthArray, obs_dtm=dtmArray,
-                      tthLow=1000, tthHigh=50,tthmLow=1000, tthmHigh=50,
-                      tlower=c(0,25,40), tupper=c(1,1,1))
+                      tthLow=950, tthHigh=50,tthmLow=950, tthmHigh=50,
+                      tlower=c(0,25,40), tupper=c(2,2,2))
 
 initial_multigid <- function(){
   list(tmin=rnorm(1,0,1),topt=rnorm(1,25,1),tmax=rnorm(1,40,1),
-       sigma_dth=rnorm(1,3,1),sigma_dtm=rnorm(1,3,1),
+       sigma_dth=runif(1,3,10),sigma_dtm=runif(1,3,10),
        tth_g=rnorm(dim(dthArray)[2],950,1),tthm_g=rnorm(dim(dthArray)[2],950,1),
-       mu_tth=rnorm(1,950,1),sig_tth=abs(rnorm(1,3,1)),mu_tthm=rnorm(1,950,1),sig_tthm=abs(rnorm(1,3,1)))
+       mu_tth=rnorm(1,950,1),sig_tth=runif(1,1,4),
+       mu_tthm=rnorm(1,950,1),sig_tthm=runif(1,1,4))
 }
 
 multiGID_fit <- stan(file="multigid_pheno_wang.stan",data=pheno_dat_gid,
@@ -81,8 +82,7 @@ plot(multiGID_fit)
 traceplot(multiGID_fit)
 
 
-multiGID_fit2 <- stan(fit=multiGID_fit,data=pheno_dat_gid,
-                     init=initial_multigid,iter=2500,chains=2)
+multiGID_fit2 <- stan(fit=multiGID_fit,data=pheno_dat_gid,init=initial_multigid,iter=2500,chains=2)
 
 multiGID_fit2
 plot(multiGID_fit2)
