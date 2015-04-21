@@ -178,7 +178,7 @@ model {
 
   tmin ~ normal(tlower[1],tupper[1]) T[-5,5];
   topt ~ normal(tlower[2],tupper[2]) T[20,30];
-  tmax ~ normal(tlower[3],tupper[3]) T[30,70];
+  tmax ~ normal(tlower[3],tupper[3]) T[30,60];
   
   for(l in 1:nyears){
     for(n in 1:ngid){

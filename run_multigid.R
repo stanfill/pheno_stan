@@ -64,7 +64,7 @@ pheno_dat_gid <- list(ndays=ncol(weatherMat), nobs=dim(dthArray)[3],ngid=dim(dth
                       obs_tavg=weatherMat, doy = doyMat, obs_tmax=tMaxMat,
                       obs_dth=dthArray, obs_dtm=dtmArray,
                       tthLow=950, tthHigh=50,tthmLow=950, tthmHigh=50,
-                      tlower=c(0,25,40), tupper=c(2,2,2))
+                      tlower=c(0,25,40), tupper=c(3,3,3))
 
 initial_multigid <- function(){
   list(tmin=rnorm(1,0,1),topt=rnorm(1,25,1),tmax=rnorm(1,40,1),
@@ -75,7 +75,7 @@ initial_multigid <- function(){
 }
 
 multiGID_fit <- stan(file="multigid_pheno_wang.stan", data=pheno_dat_gid, algorithm="NUTS",
-                     init=initial_multigid,iter=1000, chains=2)
+                     init=initial_multigid,iter=2500, chains=2)
 
 multiGID_fit
 plot(multiGID_fit)
