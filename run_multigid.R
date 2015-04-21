@@ -50,19 +50,20 @@ dtmArray[3,,] <- matrix(na.omit(temperate2012$dtm)[1:60],nrow=2)
 dtmArray[4,,] <- matrix(na.omit(heat2012$dtm)[1:60],nrow=2)
 
 #Each row corresponds to a year/temp combination
-weatherMat <- matrix(c(tavg2011[1:700],havg2011[1:700],
-                       tavg2012[1:700],havg2012[1:700]),nrow=4,byrow=TRUE)
-doyMat <- matrix(c(tdoy2011[1:700],hdoy2011[1:700],
-                   tdoy2012[1:700],hdoy2012[1:700]),nrow=4,byrow=TRUE)
-tMaxMat <- matrix(c(tmax2011[1:700],hmax2011[1:700],
-                    tmax2012[1:700],hmax2012[1:700]),nrow=4,byrow=TRUE)
+n_weatherObs <- 731
+weatherMat <- matrix(c(tavg2011[1:n_weatherObs],havg2011[1:n_weatherObs],
+                       tavg2012[1:n_weatherObs],havg2012[1:n_weatherObs]),nrow=4,byrow=TRUE)
+doyMat <- matrix(c(tdoy2011[1:n_weatherObs],hdoy2011[1:n_weatherObs],
+                   tdoy2012[1:n_weatherObs],hdoy2012[1:n_weatherObs]),nrow=4,byrow=TRUE)
+tMaxMat <- matrix(c(tmax2011[1:n_weatherObs],hmax2011[1:n_weatherObs],
+                    tmax2012[1:n_weatherObs],hmax2012[1:n_weatherObs]),nrow=4,byrow=TRUE)
 
 
 pheno_dat_gid <- list(ndays=ncol(weatherMat), nobs=dim(dthArray)[3],ngid=dim(dthArray)[2],
                       nyears=nrow(weatherMat),
                       obs_tavg=weatherMat, doy = doyMat, obs_tmax=tMaxMat,
                       obs_dth=dthArray, obs_dtm=dtmArray,
-                      tthLow=1000, tthHigh=100,tthmLow=1000, tthmHigh=100,
+                      tthLow=1000, tthHigh=50,tthmLow=1000, tthmHigh=50,
                       tlower=c(0,25,40), tupper=c(1,1,1))
 
 initial_multigid <- function(){
