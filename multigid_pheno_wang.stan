@@ -157,36 +157,25 @@ parameters {
   real<lower=0> sig_tthm;    //sd of ttmpars
 }
 
-transformed parameters{
-
-  real dth_hat_g[nyears,ngid];
-  real dtm_hat_g[nyears,ngid];
-  vector[2] mulk;
-
-  for(l in 1:nyears){
-    for(k in 1:ngid){ 
-      mulk <- stan_pheno(obs_tavg[l], doy[l], obs_tmax[l], tmin, topt, tmax, tth_g[k],tthm_g[k]);
-      dth_hat_g[l,k] <- mulk[1];
-      dtm_hat_g[l,k] <- mulk[2];
-    }
-  }
-
-}
 
 model {
 
+  //I don't actually care about the current estimate of dth or dtm so make them 
+  //local variables that don't exist outside this for loop
+  vector[2] mulk;
+
   //Hierarchy structure for tth parameter
-  mu_tth ~ uniform(tthLow,tthHigh);
+  mu_tth ~ normal(tthLow,tthHigh) T[850,1400];
   sig_tth ~ uniform(0,5);
   tth_g ~ normal(mu_tth,sig_tth);
 
   //Hierarchy structure for tthm parameter
-  mu_tthm ~ uniform(tthmLow,tthmHigh);
+  mu_tthm ~ uniform(tthmLow,tthmHigh) T[850,1400];
   sig_tthm ~ uniform(0,5);
   tthm_g ~ normal(mu_tthm,sig_tthm);
 
-  sigma_dth ~ uniform(0,20);
-  sigma_dtm ~ uniform(0,20);
+  sigma_dth ~ uniform(0,100);
+  sigma_dtm ~ uniform(0,100);
 
   tmin ~ normal(tlower[1],tupper[1]) T[-5,5];
   topt ~ normal(tlower[2],tupper[2]) T[20,30];
@@ -194,8 +183,11 @@ model {
   
   for(l in 1:nyears){
     for(n in 1:ngid){
-      obs_dth[l,n] ~ normal(dth_hat_g[l,n],sigma_dth);
-      obs_dtm[l,n] ~ normal(dtm_hat_g[l,n],sigma_dtm);
+
+      mulk <- stan_pheno(obs_tavg[l], doy[l], obs_tmax[l], tmin, topt, tmax, tth_g[n],tthm_g[n]);
+
+      obs_dth[l,n] ~ normal(mulk[1],sigma_dth);
+      obs_dtm[l,n] ~ normal(mulk[2],sigma_dtm);
     }
   }
 

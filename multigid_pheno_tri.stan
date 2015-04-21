@@ -22,7 +22,7 @@ functions{
 
   }
 
-  real wang_pheno(real temp, real tbase, real topt, real tmax){
+  real triangle_pheno(real temp, real tbase, real topt, real tmax){
 
     real z;
     real ttdaily;
@@ -47,7 +47,7 @@ functions{
     real sum_diff;
     real sum_vrn_fac;
     
-    vrn_fac <-  wang_pheno(tavg,pbase,popt,pmax);
+    vrn_fac <-  triangle_pheno(tavg,pbase,popt,pmax);
     de_vrn <- if_else(obs_tmax > 30,(obs_tmax - 30)/2,0);
   
     de_vrn <- if_else(de_vrn > vrn_fac,vrn_fac,de_vrn);
@@ -87,8 +87,8 @@ functions{
       daysto[1] <- if_else(ttcumadj<tth,daysto[1]+1.0,daysto[1]);
       daysto[2] <- daysto[2]+1.0;
 
-      //Use the Wang phenology model to calculate day i thermal time
-      ttdaily <- wang_pheno(tavg[i],tbase,topt,tmax);
+      //Use the Triangle phenology model to calculate day i thermal time
+      ttdaily <- triangle_pheno(tavg[i],tbase,topt,tmax);
 
       //Calculate day lengt factor at lat=27.37177, ppsen=70
       //dayl_fac <- if_else(ttcumadj<tth,calc_dayl_fac(27.37177, doy[i], ppsen),1);
