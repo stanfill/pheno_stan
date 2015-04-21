@@ -185,12 +185,12 @@ model {
   sig_tthm ~ uniform(0,5);
   tthm_g ~ normal(mu_tthm,sig_tthm);
 
-  sigma_dth ~ uniform(0,10);
-  sigma_dtm ~ uniform(0,10);
+  sigma_dth ~ uniform(0,20);
+  sigma_dtm ~ uniform(0,20);
 
-  tmin ~ uniform(tlower[1],tupper[1]);
-  topt ~ uniform(tlower[2],tupper[2]);
-  tmax ~ uniform(tlower[3],tupper[3]);
+  tmin ~ normal(tlower[1],tupper[1]) T[-5,5];
+  topt ~ normal(tlower[2],tupper[2]) T[20,30];
+  tmax ~ normal(tlower[3],tupper[3]) T[30,50];
   
   for(l in 1:nyears){
     for(n in 1:ngid){
