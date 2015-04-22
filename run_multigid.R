@@ -1,5 +1,6 @@
 library(rstan)
 library(simplepheno)
+library(data.table)
 data(weather_temperate_2011);data(weather_heat_2011)
 data(weather_temperate_2012);data(weather_heat_2012)
 
@@ -30,6 +31,33 @@ hdoy2011 <- as.POSIXlt(weather_heat_2011$date)$yday + 1
 tdoy2012 <- as.POSIXlt(weather_temperate_2012$date)$yday + 1
 hdoy2012 <- as.POSIXlt(weather_heat_2012$date)$yday + 1
 
+####################
+#Create a more informed data frame to analyze
+temperate2011$year <- 2011
+temperate2011$temp <- "Temperate"
+heat2011$year <- 2011
+heat2011$temp <- "Hot"
+temperate2012$year <- 2012
+temperate2012$temp <- "Temperate"
+heat2012$year <- 2012
+heat2012$temp <- "Hot"
+
+allDat <- rbind(temperate2011,heat2011,temperate2012,heat2012)
+allDat <- as.data.table(na.omit(allDat))
+setkey(allDat,GID,year,temp)
+
+redallDat <- allDat[GID!="GID6179253",]
+redallDat <- redallDat[GID!="GID6179559",]
+redallDat <- redallDat[GID!="GID5398160",]
+
+redallDat <- redallDat[-seq(9,nrow(redallDat),by=9),]
+
+table(redallDat$GID)
+temp2011 <- redallDat[year==2011&temp=="Temperate"];setkey(temp2011,GID)
+hot2011 <- redallDat[year==2011&temp=="Temperate"];setkey(hot2011,GID)
+temp2012 <- redallDat[year==2012&temp=="Hot"];setkey(temp2012,GID)
+hot2012 <- redallDat[year==2012&temp=="Hot"];setkey(hot2012,GID)
+
 
 ####################
 #Triangular phenology model
@@ -37,17 +65,20 @@ hdoy2012 <- as.POSIXlt(weather_heat_2012$date)$yday + 1
 #The first index is temp/year combination
 #The second index is genotype (GID)
 #The third index is observations for that temp-by-GID combination
-dthArray <- array(rep(0,120),c(4,2,30))
-dthArray[1,,] <- matrix(temperate2011$dth,nrow=2)
-dthArray[2,,] <- matrix(heat2011$dth,nrow=2)
-dthArray[3,,] <- matrix(na.omit(temperate2012$dth)[1:60],nrow=2)
-dthArray[4,,] <- matrix(na.omit(heat2012$dth)[1:60],nrow=2)
+ngids <- 27
+gid_obs <- nrow(hot2011)/ngids
 
-dtmArray <- array(rep(0,120),c(4,2,30))
-dtmArray[1,,] <- matrix(temperate2011$dtm,nrow=2)
-dtmArray[2,,] <- matrix(heat2011$dtm,nrow=2)
-dtmArray[3,,] <- matrix(na.omit(temperate2012$dtm)[1:60],nrow=2)
-dtmArray[4,,] <- matrix(na.omit(heat2012$dtm)[1:60],nrow=2)
+dthArray <- array(0,c(4,27,2))
+dthArray[1,,] <- matrix(temp2011$dth,nrow=27)
+dthArray[2,,] <- matrix(hot2011$dth,nrow=27)
+dthArray[3,,] <- matrix(temp2012$dth,nrow=27)
+dthArray[4,,] <- matrix(hot2012$dth,nrow=27)
+
+dtmArray <- array(0,c(4,27,2))
+dtmArray[1,,] <- matrix(temp2011$dtm,nrow=27)
+dtmArray[2,,] <- matrix(hot2011$dtm,nrow=27)
+dtmArray[3,,] <- matrix(temp2012$dtm,nrow=27)
+dtmArray[4,,] <- matrix(hot2012$dtm,nrow=27)
 
 #Each row corresponds to a year/temp combination
 n_weatherObs <- 731
