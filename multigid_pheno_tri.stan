@@ -12,11 +12,14 @@ functions{
     s1  <-  sin(lat * 0.01745);
     c1  <-  cos(lat * 0.01745);
     dec  <-  0.4093 * sin(0.0172 * (doy - 82.2));
-    dlv  <-  ((-s1 * sin(dec) - 0.1047)/(c1 * cos(dec)));
-    dlv <- if_else(dlv< (-0.87),-0.87,dlv);
+    dlv  <-  (((-s1) * sin(dec) - 0.1047)/(c1 * cos(dec)));
+  
+    if(dlv < (-0.87)){
+      dlv <- (-0.87);
+    }
 
     dayl  <-  7.639 * acos(dlv);
-    dayl_fac  <-  1 - ppsen/10000 * pow(20 - dayl,2);
+    dayl_fac  <-  1 - (ppsen/10000) * pow(20 - dayl,2);
   
     return dayl_fac;
 
@@ -30,81 +33,108 @@ functions{
     z <- 1-step(temp-topt); 
     ttdaily <- (z*(temp-tbase)/(topt-tbase)+(1-z)*(tmax-temp)/(tmax-topt));
 
-    ttdaily <- if_else(ttdaily<0,0,ttdaily);
-    ttdaily <- if_else(ttdaily>1,1,ttdaily*topt);
+    if(ttdaily<0)
+      ttdaily <- 0;
 
+    if(ttdaily>1)
+      ttdaily <- 1;
+    else
+      ttdaily <- ttdaily*topt;
 
     return ttdaily;
       
   }
 
   
-  real calc_vern_sens(real tavg, real obs_tmax, real pbase, real popt, real pmax){
+  vector calc_vern_sens(real tavg, real obs_tmax, real pbase, real popt, real pmax, real sum_diff){
+
     //Calculate the vernalisation factor for a given day.  Vernalisation is cumulative
-    //so it needs to be added as it goes
+    //so it needs to be added as it goes.  The first element of the returned vector (vrn_fac_etal)
+    //is the vernalisation factor for day i.  The second element is the cumulative sum
+    //of vrn_fac-de_vrn
+
     real vrn_fac;
     real de_vrn;
-    real sum_diff;
     real sum_vrn_fac;
-    
-    vrn_fac <-  triangle_pheno(tavg,pbase,popt,pmax);
-    de_vrn <- if_else(obs_tmax > 30,(obs_tmax - 30)/2,0);
-  
-    de_vrn <- if_else(de_vrn > vrn_fac,vrn_fac,de_vrn);
-    sum_diff <- sum_diff + vrn_fac - de_vrn;
-  
-    vrn_fac <- if_else(sum_diff<10,vrn_fac - de_vrn,vrn_fac);
+    vector[2] vrn_fac_etal;
+    real diff_cumsum;
 
-    return vrn_fac;  
+    de_vrn <- 0.0;    
+
+    vrn_fac <-  triangle_pheno(tavg,pbase,popt,pmax);
+    vrn_fac <- vrn_fac/popt;  
+
+    if(obs_tmax > 30)
+      de_vrn <- (obs_tmax - 30)/2;
+  
+    if(de_vrn > vrn_fac)
+      de_vrn <- vrn_fac;
+    
+    diff_cumsum <- sum_diff + vrn_fac - de_vrn;
+  
+    if(diff_cumsum<10)
+      vrn_fac <- vrn_fac - de_vrn;
+
+    vrn_fac_etal[1] <- vrn_fac;
+    vrn_fac_etal[2] <- diff_cumsum;
+
+    return vrn_fac_etal;  
   }
 
   vector stan_pheno(row_vector tavg, row_vector doy, row_vector obs_tmax, real tbase, real topt, real tmax, real tth, real tthm){
     
+    int n_obs;
     real ttcumadj;
     real z;
     int i;
     vector[2] daysto;
+    vector[2] ver_fac_res;
     real ttdaily;
     real ttm;
-
-    real ppsen;
+  
     real dayl_fac;
     real vern_fac;
     real vf_i;
 
-    vern_fac <- 0.0;
-    ppsen  <-  70.0;
-    ttm <- tth+tthm;
+    n_obs <- num_elements(tavg); //To protect against going too far in tavg vector
 
+    vern_fac <- 0.0;
+    ttm <- tth+tthm;
+    ver_fac_res[2] <- 0.0;
     ttcumadj <- 0.0;
     daysto[1] <- 0.0;
     daysto[2] <- 0.0;
 
     i <- 1;
 
-    while(ttcumadj<ttm){
+    while(ttcumadj<ttm && i<n_obs){
 
-      daysto[1] <- if_else(ttcumadj<tth,daysto[1]+1.0,daysto[1]);
+      if(ttcumadj<tth)
+        daysto[1] <- daysto[1]+1.0;
+      
       daysto[2] <- daysto[2]+1.0;
 
       //Use the Triangle phenology model to calculate day i thermal time
       ttdaily <- triangle_pheno(tavg[i],tbase,topt,tmax);
 
-      //Calculate day lengt factor at lat=27.37177, ppsen=70
-      //dayl_fac <- if_else(ttcumadj<tth,calc_dayl_fac(27.37177, doy[i], ppsen),1);
-      dayl_fac <- calc_dayl_fac(27.37177, doy[i], ppsen);
+      //Calculate day lengt factor at lat=27.37177, ppsen=30
+      dayl_fac <- calc_dayl_fac(27.37177, doy[i], 30.0);
 
-      //Calculate vernalisation factor with pbase=-5, popt=7 and pmax=15
-      vf_i <- calc_vern_sens(tavg[i], obs_tmax[i], -5.0, 7.0, 15.0);
+      //Calculate vernalisation factor with pbase=0, popt=25 and pmax=34
+      ver_fac_res <- calc_vern_sens(tavg[i], obs_tmax[i], 0.0, 25.0, 34.0,ver_fac_res[2]);
+      vf_i <- ver_fac_res[1];
       vern_fac <- vern_fac+vf_i;
-      vern_fac <- if_else(vern_fac+vf_i>1,1,vern_fac);
-      vern_fac <- if_else(vern_fac+vf_i<0,0,vern_fac);
+
+      if(vern_fac>1)
+        vern_fac <- 1;
+      
+      if(vern_fac<0)
+        vern_fac <- 0;
 
       ttcumadj <- ttcumadj+ttdaily*dayl_fac*vern_fac;
 
       i <- i+1;
     }
-
 
     return daysto;
   
@@ -155,45 +185,37 @@ parameters {
   real<lower=0> sig_tthm;    //sd of ttmpars
 }
 
-transformed parameters{
-
-  real dth_hat_g[nyears,ngid];
-  real dtm_hat_g[nyears,ngid];
-  vector[2] mulk;
-
-  for(l in 1:nyears){
-    for(k in 1:ngid){ 
-      mulk <- stan_pheno(obs_tavg[l], doy[l], obs_tmax[l], tmin, topt, tmax, tth_g[k],tthm_g[k]);
-      dth_hat_g[l,k] <- mulk[1];
-      dtm_hat_g[l,k] <- mulk[2];
-    }
-  }
-
-}
 
 model {
 
+  //I don't actually care about the current estimate of dth or dtm so make them 
+  //local variables that don't exist outside this code chunck
+  vector[2] mulk;
+
   //Hierarchy structure for tth parameter
-  mu_tth ~ uniform(tthLow,tthHigh);
+  mu_tth ~ normal(tthLow,tthHigh) T[600,1200];
   sig_tth ~ uniform(0,5);
   tth_g ~ normal(mu_tth,sig_tth);
 
   //Hierarchy structure for tthm parameter
-  mu_tthm ~ uniform(tthmLow,tthmHigh);
+  mu_tthm ~ normal(tthmLow,tthmHigh) T[600,1200]; 
   sig_tthm ~ uniform(0,5);
-  tthm_g ~ normal(mu_tthm,sig_tthm);
+  tthm_g ~ normal(mu_tthm,sig_tthm);              //Each tthm is assumed normal
 
-  sigma_dth ~ uniform(0,10);
-  sigma_dtm ~ uniform(0,10);
+  sigma_dth ~ uniform(0,40);
+  sigma_dtm ~ uniform(0,40);
 
-  tmin ~ uniform(tlower[1],tupper[1]);
-  topt ~ uniform(tlower[2],tupper[2]);
-  tmax ~ uniform(tlower[3],tupper[3]);
+  tmin ~ normal(tlower[1],tupper[1]) T[-5,5];
+  topt ~ normal(tlower[2],tupper[2]) T[20,30];
+  tmax ~ normal(tlower[3],tupper[3]) T[30,60];
   
   for(l in 1:nyears){
     for(n in 1:ngid){
-      obs_dth[l,n] ~ normal(dth_hat_g[l,n],sigma_dth);
-      obs_dtm[l,n] ~ normal(dtm_hat_g[l,n],sigma_dtm);
+
+      mulk <- stan_pheno(obs_tavg[l], doy[l], obs_tmax[l], tmin, topt, tmax, tth_g[n],tthm_g[n]);
+
+      obs_dth[l,n] ~ normal(mulk[1],sigma_dth);
+      obs_dtm[l,n] ~ normal(mulk[2],sigma_dtm);
     }
   }
 

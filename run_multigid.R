@@ -74,7 +74,7 @@ initial_multigid <- function(){
        mu_tthm=rnorm(1,850,1),sig_tthm=runif(1,1,4))
 }
 
-multiGID_fit <- stan(file="multigid_pheno_wang.stan", data=pheno_dat_gid, algorithm="NUTS",
+multiGID_fit <- stan(file="multigid_pheno_tri.stan", data=pheno_dat_gid, algorithm="NUTS",
                      init=initial_multigid,iter=1000, chains=2)
 
 multiGID_fit
