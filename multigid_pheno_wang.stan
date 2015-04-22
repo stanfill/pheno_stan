@@ -58,7 +58,9 @@ functions{
     real vrn_fac;
     real de_vrn;
     real sum_vrn_fac;
-    vector[2] vrn_facetal;
+    vector[2] vrn_fac_etal;
+    real diff_cumsum;
+
     de_vrn <- 0.0;    
 
     vrn_fac <-  wang_pheno(tavg,pbase,popt,pmax);
@@ -69,14 +71,14 @@ functions{
   
     if(de_vrn > vrn_fac)
       de_vrn <- vrn_fac;
-
-    sum_diff <- sum_diff + vrn_fac - de_vrn;
+    
+    diff_cumsum <- sum_diff + vrn_fac - de_vrn;
   
-    if(sum_diff<10)
+    if(diff_cumsum<10)
       vrn_fac <- vrn_fac - de_vrn;
 
     vrn_fac_etal[1] <- vrn_fac;
-    vrn_fac_etal[2] <- sum_diff;
+    vrn_fac_etal[2] <- diff_cumsum;
 
     return vrn_fac_etal;  
   }
