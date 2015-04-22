@@ -120,8 +120,8 @@ functions{
       //Calculate day lengt factor at lat=27.37177, ppsen=30
       dayl_fac <- calc_dayl_fac(27.37177, doy[i], 30.0);
 
-      //Calculate vernalisation factor with pbase=0, popt=25 and pmax=34
-      ver_fac_res <- calc_vern_sens(tavg[i], obs_tmax[i], 0.0, 25.0, 34.0,ver_fac_res[2]);
+      //Calculate vernalisation factor with pbase=-5, popt=7 and pmax=15
+      ver_fac_res <- calc_vern_sens(tavg[i], obs_tmax[i], (-5.0), 7.0, 15.0,ver_fac_res[2]);
       vf_i <- ver_fac_res[1];
       vern_fac <- vern_fac+vf_i;
 
@@ -207,7 +207,7 @@ model {
 
   tmin ~ normal(tlower[1],tupper[1]) T[-5,5];
   topt ~ normal(tlower[2],tupper[2]) T[20,30];
-  tmax ~ normal(tlower[3],tupper[3]) T[30,60];
+  tmax ~ normal(tlower[3],tupper[3]) T[30,50];
   
   for(l in 1:nyears){
     for(n in 1:ngid){

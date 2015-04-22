@@ -128,9 +128,9 @@ pheno_dat_gid <- list(ndays=ncol(weatherMat), nobs=gid_obs,ngid=ngids,
 initial_multigid <- function(){
   list(tmin=rnorm(1,0,1),topt=rnorm(1,25,1),tmax=rnorm(1,40,1),
        sigma_dth=runif(1,3,10),sigma_dtm=runif(1,3,10),
-       tth_g=rnorm(ngids,850,1),tthm_g=rnorm(ngids,850,1),
-       mu_tth=rnorm(1,850,1),sig_tth=runif(1,1,4),
-       mu_tthm=rnorm(1,850,1),sig_tthm=runif(1,1,4))
+       tth_g=rnorm(ngids,900,1),tthm_g=rnorm(ngids,900,1),
+       mu_tth=rnorm(1,900,1),sig_tth=runif(1,1,4),
+       mu_tthm=rnorm(1,900,1),sig_tthm=runif(1,1,4))
 }
 
 
