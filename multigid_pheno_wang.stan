@@ -12,11 +12,14 @@ functions{
     s1  <-  sin(lat * 0.01745);
     c1  <-  cos(lat * 0.01745);
     dec  <-  0.4093 * sin(0.0172 * (doy - 82.2));
-    dlv  <-  ((-s1 * sin(dec) - 0.1047)/(c1 * cos(dec)));
-    dlv <- if_else(dlv< (-0.87),-0.87,dlv);
+    dlv  <-  (((-s1) * sin(dec) - 0.1047)/(c1 * cos(dec)));
+  
+    if(dlv < (-0.87)){
+      dlv <- (-0.87);
+    }
 
     dayl  <-  7.639 * acos(dlv);
-    dayl_fac  <-  1 - ppsen/10000 * pow(20 - dayl,2);
+    dayl_fac  <-  1 - (ppsen/10000) * pow(20 - dayl,2);
   
     return dayl_fac;
 
@@ -29,35 +32,53 @@ functions{
     real ttdaily;
   
     //Constants used in fitting the Wang function
-    a  <-  log(2) / log((tmax - tbase) / (topt - tbase));
+    a  <-  (log2()) / log((tmax - tbase) / (topt - tbase));
     denom <- pow(topt - tbase,2*a);
       
     //This is the Wang (curved) phenology model
     ttdaily <- (2*pow(temp - tbase,a)*pow(topt - tbase,a) - pow(temp - tbase,2*a)) / denom;
-    ttdaily <- if_else(temp<tbase||temp>tmax,0,ttdaily*topt);
+  
+    if(temp<tbase||temp>tmax)
+      ttdaily <- 0;
+    else
+      ttdaily <- ttdaily*topt;
 
     return ttdaily;
       
   }
 
   
-  real calc_vern_sens(real tavg, real obs_tmax, real pbase, real popt, real pmax){
+  vector calc_vern_sens(real tavg, real obs_tmax, real pbase, real popt, real pmax, real sum_diff){
+
     //Calculate the vernalisation factor for a given day.  Vernalisation is cumulative
-    //so it needs to be added as it goes
+    //so it needs to be added as it goes.  The first element of the returned vector (vrn_fac_etal)
+    //is the vernalisation factor for day i.  The second element is the cumulative sum
+    //of vrn_fac-de_vrn
+
     real vrn_fac;
     real de_vrn;
-    real sum_diff;
     real sum_vrn_fac;
-    
+    vector[2] vrn_facetal;
+    de_vrn <- 0.0;    
+
     vrn_fac <-  wang_pheno(tavg,pbase,popt,pmax);
-    de_vrn <- if_else(obs_tmax > 30,(obs_tmax - 30)/2,0);
+    vrn_fac <- vrn_fac/popt;  
+
+    if(obs_tmax > 30)
+      de_vrn <- (obs_tmax - 30)/2;
   
-    de_vrn <- if_else(de_vrn > vrn_fac,vrn_fac,de_vrn);
+    if(de_vrn > vrn_fac)
+      de_vrn <- vrn_fac;
+
     sum_diff <- sum_diff + vrn_fac - de_vrn;
   
-    vrn_fac <- if_else(sum_diff<10,vrn_fac - de_vrn,vrn_fac);
+    if(sum_diff<10)
+      vrn_fac <- vrn_fac - de_vrn;
 
-    return vrn_fac;  
+    vrn_fac_etal[1] <- vrn_fac;
+    vrn_fac_etal[2] <- sum_diff;
+
+    return vrn_fac_etal;  
   }
 
   vector stan_pheno(row_vector tavg, row_vector doy, row_vector obs_tmax, real tbase, real topt, real tmax, real tth, real tthm){
@@ -67,9 +88,10 @@ functions{
     real z;
     int i;
     vector[2] daysto;
+    vector[2] ver_fac_res;
     real ttdaily;
     real ttm;
-
+  
     real dayl_fac;
     real vern_fac;
     real vf_i;
@@ -78,7 +100,7 @@ functions{
 
     vern_fac <- 0.0;
     ttm <- tth+tthm;
-
+    ver_fac_res[2] <- 0.0;
     ttcumadj <- 0.0;
     daysto[1] <- 0.0;
     daysto[2] <- 0.0;
@@ -87,20 +109,27 @@ functions{
 
     while(ttcumadj<ttm && i<n_obs){
 
-      daysto[1] <- if_else(ttcumadj<tth,daysto[1]+1.0,daysto[1]);
+      if(ttcumadj<tth)
+        daysto[1] <- daysto[1]+1.0;
+      
       daysto[2] <- daysto[2]+1.0;
 
       //Use the Wang phenology model to calculate day i thermal time
       ttdaily <- wang_pheno(tavg[i],tbase,topt,tmax);
 
-      //Calculate day lengt factor at lat=27.37177, ppsen=70
-      dayl_fac <- calc_dayl_fac(27.37177, doy[i], 70.0);
+      //Calculate day lengt factor at lat=27.37177, ppsen=30
+      dayl_fac <- calc_dayl_fac(27.37177, doy[i], 30.0);
 
-      //Calculate vernalisation factor with pbase=-5, popt=7 and pmax=15
-      vf_i <- calc_vern_sens(tavg[i], obs_tmax[i], -5.0, 7.0, 15.0);
+      //Calculate vernalisation factor with pbase=0, popt=25 and pmax=34
+      ver_fac_res <- calc_vern_sens(tavg[i], obs_tmax[i], 0.0, 25.0, 34.0,ver_fac_res[2]);
+      vf_i <- ver_fac_res[1];
       vern_fac <- vern_fac+vf_i;
-      vern_fac <- if_else(vern_fac+vf_i>1,1,vern_fac);
-      vern_fac <- if_else(vern_fac+vf_i<0,0,vern_fac);
+
+      if(vern_fac>1)
+        vern_fac <- 1;
+      
+      if(vern_fac<0)
+        vern_fac <- 0;
 
       ttcumadj <- ttcumadj+ttdaily*dayl_fac*vern_fac;
 

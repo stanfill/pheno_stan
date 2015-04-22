@@ -75,11 +75,12 @@ initial_multigid <- function(){
 }
 
 multiGID_fit <- stan(file="multigid_pheno_wang.stan", data=pheno_dat_gid, algorithm="NUTS",
-                     init=initial_multigid,iter=2500, chains=2)
+                     init=initial_multigid,iter=1000, chains=2)
 
 multiGID_fit
 plot(multiGID_fit)
 traceplot(multiGID_fit)
+
 
 
 multiGID_fit2 <- stan(fit=multiGID_fit,data=pheno_dat_gid,init=initial_multigid,iter=2500,chains=2)
