@@ -2,6 +2,7 @@ library(rstan)
 library(simplepheno)
 library(data.table)
 library(parallel)
+library(beepr)
 data(weather_temperate_2011);data(weather_heat_2011)
 data(weather_temperate_2012);data(weather_heat_2012)
 data(weather_temperate_2013);data(weather_heat_2013)
@@ -26,40 +27,39 @@ havg2013 <- (weather_heat_2013$tmin+weather_heat_2013$tmax)/2
 tmax2013 <- weather_temperate_2013$tmax
 hmax2013 <- weather_heat_2013$tmax
 
+
 temperate2011 <- phenology_temperate_2011
+temperate2011$year <- 2011
+temperate2011$temp <- "Temperate"
 heat2011 <- phenology_heat_2011
-
-temperate2012 <- phenology_temperate_2012
-heat2012 <- phenology_heat_2012
-
-temperate2013 <- phenology_temperate_2013
-heat2013 <- phenology_heat_2013
-
+heat2011$year <- 2011
+heat2011$temp <- "Hot"
 tdoy2011 <- as.POSIXlt(weather_temperate_2011$date)$yday + 1
 hdoy2011 <- as.POSIXlt(weather_heat_2011$date)$yday + 1
 
+
+temperate2012 <- phenology_temperate_2012
+temperate2012$year <- 2012
+temperate2012$temp <- "Temperate"
+heat2012 <- phenology_heat_2012
+heat2012$year <- 2012
+heat2012$temp <- "Hot"
 tdoy2012 <- as.POSIXlt(weather_temperate_2012$date)$yday + 1
 hdoy2012 <- as.POSIXlt(weather_heat_2012$date)$yday + 1
 
+
+temperate2013 <- phenology_temperate_2013
+temperate2013$year <- 2013
+temperate2013$temp <- "Temperate"
+heat2013 <- phenology_heat_2013
+heat2013$year <- 2013
+heat2013$temp <- "Hot"
 tdoy2013 <- as.POSIXlt(weather_temperate_2013$date)$yday + 1
 hdoy2013 <- as.POSIXlt(weather_heat_2013$date)$yday + 1
 
 
 ####################
 #Create a more informed data frame to analyze
-temperate2011$year <- 2011
-temperate2011$temp <- "Temperate"
-heat2011$year <- 2011
-heat2011$temp <- "Hot"
-temperate2012$year <- 2012
-temperate2012$temp <- "Temperate"
-heat2012$year <- 2012
-heat2012$temp <- "Hot"
-temperate2013$year <- 2013
-temperate2013$temp <- "Temperate"
-heat2013$year <- 2013
-heat2013$temp <- "Hot"
-
 allDat <- rbind(temperate2011,heat2011,temperate2012,heat2012,temperate2013,heat2013)
 allDat <- as.data.table(na.omit(allDat))
 setkey(allDat,GID,year,temp)
@@ -145,10 +145,8 @@ clusterExport(cl = CL, c("seed", "pheno_dat_gid","initial_multigid", "f1","ngids
 sflist1 <-parLapply(CL, 1:2,
                fun = function(i) {
                  require(rstan)
-                 stan(fit = f1, seed = seed,
-                        data = pheno_dat_gid,init=initial_multigid,
-                        chains = 1, chain_id = i,iter=1000,
-                        refresh = -1)
+                 stan(fit = f1, seed = seed, data = pheno_dat_gid, init=initial_multigid,
+                        chains = 1, chain_id = i, iter=1000, refresh = -1)
                  })
 fit <- sflist2stanfit(sflist1)
 stopCluster(CL)
