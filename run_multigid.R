@@ -1,6 +1,7 @@
 library(rstan)
 library(simplepheno)
 library(data.table)
+library(parallel)
 data(weather_temperate_2011);data(weather_heat_2011)
 data(weather_temperate_2012);data(weather_heat_2012)
 
@@ -65,20 +66,20 @@ hot2012 <- redallDat[year==2012&temp=="Hot"];setkey(hot2012,GID)
 #The first index is temp/year combination
 #The second index is genotype (GID)
 #The third index is observations for that temp-by-GID combination
-ngids <- 27
+ngids <- 2
 gid_obs <- nrow(hot2011)/ngids
 
-dthArray <- array(0,c(4,27,2))
-dthArray[1,,] <- matrix(temp2011$dth,nrow=27)
-dthArray[2,,] <- matrix(hot2011$dth,nrow=27)
-dthArray[3,,] <- matrix(temp2012$dth,nrow=27)
-dthArray[4,,] <- matrix(hot2012$dth,nrow=27)
+dthArray <- array(0,c(4,ngids,gid_obs))
+dthArray[1,,] <- matrix(temp2011$dth,nrow=ngids)
+dthArray[2,,] <- matrix(hot2011$dth,nrow=ngids)
+dthArray[3,,] <- matrix(temp2012$dth,nrow=ngids)
+dthArray[4,,] <- matrix(hot2012$dth,nrow=ngids)
 
-dtmArray <- array(0,c(4,27,2))
-dtmArray[1,,] <- matrix(temp2011$dtm,nrow=27)
-dtmArray[2,,] <- matrix(hot2011$dtm,nrow=27)
-dtmArray[3,,] <- matrix(temp2012$dtm,nrow=27)
-dtmArray[4,,] <- matrix(hot2012$dtm,nrow=27)
+dtmArray <- array(0,c(4,ngids,gid_obs))
+dtmArray[1,,] <- matrix(temp2011$dtm,nrow=ngids)
+dtmArray[2,,] <- matrix(hot2011$dtm,nrow=ngids)
+dtmArray[3,,] <- matrix(temp2012$dtm,nrow=ngids)
+dtmArray[4,,] <- matrix(hot2012$dtm,nrow=ngids)
 
 #Each row corresponds to a year/temp combination
 n_weatherObs <- 731
@@ -105,6 +106,9 @@ initial_multigid <- function(){
        mu_tthm=rnorm(1,850,1),sig_tthm=runif(1,1,4))
 }
 
+##########
+#Run one chain at a time
+
 multiGID_fit <- stan(file="multigid_pheno_tri.stan", data=pheno_dat_gid, algorithm="NUTS",
                      init=initial_multigid,iter=1000, chains=2)
 
@@ -112,10 +116,21 @@ multiGID_fit
 plot(multiGID_fit)
 traceplot(multiGID_fit)
 
+##########
+#Run two chains in parallel
 
-
-multiGID_fit2 <- stan(fit=multiGID_fit,data=pheno_dat_gid,init=initial_multigid,iter=2500,chains=2)
-
-multiGID_fit2
-plot(multiGID_fit2)
-traceplot(multiGID_fit2)
+f1 <- stan(file="multigid_pheno_tri.stan",data=pheno_dat_gid,init=initial_multigid,chains=1, iter=1)
+seed <- 12345
+num_core = 2
+CL = makeCluster(num_core, outfile = 'cluster.log')
+clusterExport(cl = CL, c("seed", "pheno_dat_gid","initial_multigid", "f1"))
+sflist1 <-parLapply(CL, 1:4,
+               fun = function(i) {
+                 require(rstan)
+                 stan(fit = f1, seed = seed,
+                        data = pheno_dat_gid,init=initial_multigid,
+                        chains = 1, chain_id = i,iter=1000,
+                        refresh = -1)
+                 })
+fit <- sflist2stanfit(sflist1)
+stopCluster(CL)
