@@ -86,7 +86,7 @@ hot2013 <- redallDat[year==2013&temp=="Hot"];setkey(hot2013,GID)
 #The first index is temp/year combination
 #The second index is genotype (GID)
 #The third index is observations for that temp-by-GID combination
-ngids <- 27
+ngids <- 2
 gid_obs <- nrow(hot2011)/ngids
 
 dthArray <- array(0,c(6,ngids,gid_obs))
@@ -128,16 +128,16 @@ pheno_dat_gid <- list(ndays=ncol(weatherMat), nobs=gid_obs,ngid=ngids,
 initial_multigid <- function(){
   list(tmin=rnorm(1,0,1),topt=rnorm(1,25,1),tmax=rnorm(1,40,1),
        sigma_dth=runif(1,3,10),sigma_dtm=runif(1,3,10),
-       tth_g=rnorm(ngids,900,1),tthm_g=rnorm(ngids,900,1),
-       mu_tth=rnorm(1,900,1),sig_tth=runif(1,1,4),
-       mu_tthm=rnorm(1,900,1),sig_tthm=runif(1,1,4))
+       tth_g=rnorm(ngids,1000,1),tthm_g=rnorm(ngids,1000,1),
+       mu_tth=rnorm(1,1000,1),sig_tth=runif(1,1,4),
+       mu_tthm=rnorm(1,1000,1),sig_tthm=runif(1,1,4), ppsen=50)
 }
 
 
 ##########
 #Run two chains in parallel
 
-f1 <- stan(file="multigid_pheno_tri.stan",data=pheno_dat_gid,init=initial_multigid,chains=1, iter=1)
+f1 <- stan(file="multigid_pheno_wt_ppsen.stan",data=pheno_dat_gid,init=initial_multigid,chains=1, iter=1)
 seed <- 12345
 num_core  <-  2
 CL  <-  makeCluster(num_core, outfile = 'cluster.log')
@@ -146,7 +146,7 @@ sflist1 <-parLapply(CL, 1:2,
                fun = function(i) {
                  require(rstan)
                  stan(fit = f1, seed = seed, data = pheno_dat_gid, init=initial_multigid,
-                        chains = 1, chain_id = i, iter=5000, refresh = -1)
+                        chains = 1, chain_id = i, iter=1000, refresh = -1)
                  })
 fit <- sflist2stanfit(sflist1)
 stopCluster(CL)
@@ -159,7 +159,7 @@ traceplot(fit)
 #Run one chain at a time
 
 multiGID_fit <- stan(file="multigid_pheno_tri.stan", data=pheno_dat_gid, algorithm="NUTS",
-                     init=initial_multigid,iter=1000, chains=2)
+                     init=initial_multigid,iter=100, chains=2)
 
 multiGID_fit
 plot(multiGID_fit)
