@@ -130,7 +130,7 @@ initial_multigid <- function(){
        sigma_dth=runif(1,3,10),sigma_dtm=runif(1,3,10),
        tth_g=rnorm(ngids,1000,1),tthm_g=rnorm(ngids,1000,1),
        mu_tth=rnorm(1,1000,1),sig_tth=runif(1,1,4),
-       mu_tthm=rnorm(1,1000,1),sig_tthm=runif(1,1,4), ppsen=50)
+       mu_tthm=rnorm(1,1000,1),sig_tthm=runif(1,1,4), ppsen=runif(1,25,70))
 }
 
 
@@ -146,7 +146,7 @@ sflist1 <-parLapply(CL, 1:2,
                fun = function(i) {
                  require(rstan)
                  stan(fit = f1, seed = seed, data = pheno_dat_gid, init=initial_multigid,
-                        chains = 1, chain_id = i, iter=1000, refresh = -1)
+                        chains = 1, chain_id = i, iter=2500, refresh = -1)
                  })
 fit <- sflist2stanfit(sflist1)
 stopCluster(CL)

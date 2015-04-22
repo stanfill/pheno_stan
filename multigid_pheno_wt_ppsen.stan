@@ -130,9 +130,6 @@ functions{
     i <- 1;
 
     while(ttcumadj<ttm && i<n_obs){
-
-      if(ttcumadj<tth)
-        daysto[1] <- daysto[1]+1.0;
       
       daysto[2] <- daysto[2]+1.0;
 
@@ -153,7 +150,15 @@ functions{
       if(vern_fac<0)
         vern_fac <- 0;
 
-      ttcumadj <- ttcumadj+ttdaily*dayl_fac*vern_fac;
+      if(ttcumadj<tth){
+        //Until heading is reached, adjust the daily tt for dayl and vern_fac
+        daysto[1] <- daysto[1]+1.0;
+        ttcumadj <- ttcumadj+ttdaily*dayl_fac*vern_fac;
+      }
+      else{
+        //After heading is reached, don't make any adjustments
+        ttcumadj <- ttcumadj+ttdaily;
+      }
 
       i <- i+1;
     }
@@ -203,9 +208,9 @@ parameters {
   real<lower=900,upper=1400> tthm_g[ngid];        //Genome specific tth value
 
 
-  real mu_tth<lower=900, upper=1400>;              //Mean of the tthpars
+  real<lower=900, upper=1400> mu_tth;              //Mean of the tthpars
   real<lower=0> sig_tth;    //sd of tthpars
-  real mu_tthm<lower=900, upper=1400>;              //Mean of the ttmpars
+  real<lower=900, upper=1400> mu_tthm;              //Mean of the ttmpars
   real<lower=0> sig_tthm;    //sd of ttmpars
 }
 
@@ -243,6 +248,7 @@ model {
 
       obs_dth[l,n] ~ normal(mulk[1],sigma_dth);
       obs_dtm[l,n] ~ normal(mulk[2],sigma_dtm);
+
     }
   }
 
