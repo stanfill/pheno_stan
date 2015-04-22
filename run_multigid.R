@@ -86,7 +86,7 @@ hot2013 <- redallDat[year==2013&temp=="Hot"];setkey(hot2013,GID)
 #The first index is temp/year combination
 #The second index is genotype (GID)
 #The third index is observations for that temp-by-GID combination
-ngids <- 2
+ngids <- 27
 gid_obs <- nrow(hot2011)/ngids
 
 dthArray <- array(0,c(6,ngids,gid_obs))
@@ -146,7 +146,7 @@ sflist1 <-parLapply(CL, 1:2,
                fun = function(i) {
                  require(rstan)
                  stan(fit = f1, seed = seed, data = pheno_dat_gid, init=initial_multigid,
-                        chains = 1, chain_id = i, iter=1000, refresh = -1)
+                        chains = 1, chain_id = i, iter=5000, refresh = -1)
                  })
 fit <- sflist2stanfit(sflist1)
 stopCluster(CL)
