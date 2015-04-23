@@ -115,14 +115,14 @@ pheno_dat_gid <- list(ndays=ncol(weatherMat), nobs=gid_obs,
                       obs_tavg=weatherMat, doy = doyMat, obs_tmax=tMaxMat,
                       obs_dth=dthArray, 
                       tthLow=950, tthHigh=50,
-                      tlower=c(-5,20,30), tupper=c(5,30,50))
+                      tlower=c(0,25,40), tupper=c(3,3,3))
 
 initial_multigid <- function(){
   list(tmin=runif(1,-5,5),topt=runif(1,20,30),tmax=runif(1,30,50),
        sigma_dth=runif(1,3,10),
        tth_g=rnorm(nyears,1000,10),
-       mu_tth=rnorm(1,1000,10),sig_tth=runif(1,1,4),
-       ppsen=runif(1,25,70))
+       #mu_tth=rnorm(1,1000,10),sig_tth=runif(1,1,4),
+       ppsen=rnorm(1,30,5))
 }
 
 

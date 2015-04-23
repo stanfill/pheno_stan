@@ -136,7 +136,8 @@ functions{
       dayl_fac <- calc_dayl_fac(27.37177, doy[i], ppsen);
 
       //Calculate vernalisation factor with pbase=-5, popt=7 and pmax=15
-      ver_fac_res <- calc_vern_sens(tavg[i], obs_tmax[i], (0), 26.0, 34.0,ver_fac_res[2]);
+      //ver_fac_res <- calc_vern_sens(tavg[i], obs_tmax[i], (-5.0), 7.0, 15.0,ver_fac_res[2]);
+      ver_fac_res <- calc_vern_sens(tavg[i], obs_tmax[i], 0.0, 26.0, 34.0,ver_fac_res[2]);
       vf_i <- ver_fac_res[1];
       vern_fac <- vern_fac+vf_i;
 
@@ -194,8 +195,8 @@ parameters {
   real<lower=700,upper=1400> tth_g[nyears];        //Genome specific tth value
 
 
-  real<lower=700, upper=1400> mu_tth;              //Mean of the tthpars
-  real<lower=0> sig_tth;    //sd of tthpars
+  //real<lower=700, upper=1400> mu_tth;              //Mean of the tthpars
+  //real<lower=0> sig_tth;    //sd of tthpars
 
 }
 
@@ -207,17 +208,17 @@ model {
   real mulk;
 
   //Hierarchy structure for tth parameter
-  mu_tth ~ normal(tthLow,tthHigh);
-  sig_tth ~ uniform(0,5);
-  tth_g ~ normal(mu_tth,sig_tth);
+  //mu_tth ~ normal(tthLow,tthHigh);
+  //sig_tth ~ uniform(0,5);
+  tth_g ~ normal(tthLow,tthHigh);
 
   sigma_dth ~ uniform(0,40);
 
-  tmin ~ uniform(tlower[1],tupper[1]);
-  topt ~ uniform(tlower[2],tupper[2]);
-  tmax ~ uniform(tlower[3],tupper[3]);
+  tmin ~ normal(tlower[1],tupper[1]);
+  topt ~ normal(tlower[2],tupper[2]);
+  tmax ~ normal(tlower[3],tupper[3]);
   
-  ppsen ~ uniform(20, 80);
+  ppsen ~ normal(30, 5);
 
 
   for(l in 1:nyears){
