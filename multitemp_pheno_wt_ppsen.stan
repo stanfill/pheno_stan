@@ -140,7 +140,7 @@ functions{
       dayl_fac <- calc_dayl_fac(27.37177, doy[i], ppsen);
 
       //Calculate vernalisation factor with pbase=-5, popt=7 and pmax=15
-      ver_fac_res <- calc_vern_sens(tavg[i], obs_tmax[i], (-5.0), 7.0, 15.0,ver_fac_res[2]);
+      ver_fac_res <- calc_vern_sens(tavg[i], obs_tmax[i], (0), 26.0, 34.0,ver_fac_res[2]);
       vf_i <- ver_fac_res[1];
       vern_fac <- vern_fac+vf_i;
 
@@ -243,11 +243,11 @@ model {
   for(l in 1:nyears){
 
       mulk <- stan_pheno(obs_tavg[l], doy[l], obs_tmax[l], tmin, topt, tmax, tth_g[l],tthm_g[l], ppsen);
-
+      //print("mulk = ", mulk); //Compare to results of pheno()
       obs_dth[l] ~ normal(mulk[1],sigma_dth);
       obs_dtm[l] ~ normal(mulk[2],sigma_dtm);
 
     
   }
-
+  //print("nyears = ",nyears);
 }

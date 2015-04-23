@@ -143,7 +143,7 @@ functions{
       dayl_fac <- calc_dayl_fac(27.37177, doy[i], 30.0);
 
       //Calculate vernalisation factor with pbase=-5, popt=7 and pmax=15
-      ver_fac_res <- calc_vern_sens(tavg[i], obs_tmax[i], (-5.0), 7.0, 15.0,ver_fac_res[2]);
+      ver_fac_res <- calc_vern_sens(tavg[i], obs_tmax[i], (0), 26.0, 34.0,ver_fac_res[2]);
       vf_i <- ver_fac_res[1];
       vern_fac <- vern_fac+vf_i;
 
