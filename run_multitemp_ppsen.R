@@ -122,14 +122,14 @@ pheno_dat_gid <- list(ndays=ncol(weatherMat), nobs=gid_obs,
                       obs_tavg=weatherMat, doy = doyMat, obs_tmax=tMaxMat,
                       obs_dth=dthArray, obs_dtm=dtmArray,
                       tthLow=950, tthHigh=50,tthmLow=950, tthmHigh=50,
-                      tlower=c(0,25,40), tupper=c(3,3,3))
+                      tlower=c(-5,20,30), tupper=c(5,30,50))
 
 initial_multigid <- function(){
-  list(tmin=rnorm(1,0,1),topt=rnorm(1,25,1),tmax=rnorm(1,40,1),
+  list(tmin=runif(1,-5,5),topt=runif(1,20,30),tmax=runif(1,30,50),
        sigma_dth=runif(1,3,10),sigma_dtm=runif(1,3,10),
-       tth_g=rnorm(nyears,1000,1),tthm_g=rnorm(nyears,1000,1),
-       mu_tth=rnorm(1,1000,1),sig_tth=runif(1,1,4),
-       mu_tthm=rnorm(1,1000,1),sig_tthm=runif(1,1,4), ppsen=runif(1,25,70))
+       tth_g=rnorm(nyears,1000,10),tthm_g=rnorm(nyears,1000,10),
+       mu_tth=rnorm(1,1000,10),sig_tth=runif(1,1,4),
+       mu_tthm=rnorm(1,1000,10),sig_tthm=runif(1,1,4), ppsen=runif(1,25,70))
 }
 
 
@@ -137,15 +137,15 @@ initial_multigid <- function(){
 #Run two chains in parallel
 
 f1 <- stan(file="multitemp_pheno_wt_ppsen.stan",data=pheno_dat_gid,init=initial_multigid,chains=1, iter=1)
-seed <- 12345
+#seed <- 12345
 num_core  <-  2
 CL  <-  makeCluster(num_core, outfile = 'cluster.log')
-clusterExport(cl = CL, c("seed", "pheno_dat_gid","initial_multigid", "f1","nyears"))
+clusterExport(cl = CL, c("pheno_dat_gid","initial_multigid", "f1","nyears"))
 sflist1 <-parLapply(CL, 1:2,
                fun = function(i) {
                  require(rstan)
-                 stan(fit = f1, seed = seed, data = pheno_dat_gid, init=initial_multigid,
-                        chains = 1, chain_id = i, iter=1000, refresh = -1)
+                 stan(fit = f1, data = pheno_dat_gid, init=initial_multigid,
+                        chains = 1, chain_id = i, iter=5000, refresh = -1)
                  })
 fit <- sflist2stanfit(sflist1)
 stopCluster(CL)

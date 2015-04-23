@@ -179,8 +179,8 @@ data {
   matrix[nyears,ndays] doy;
   matrix[nyears,ndays] obs_tmax;
 
-  real obs_dth[nyears,nobs];
-  real obs_dtm[nyears,nobs];
+  matrix[nyears,nobs] obs_dth;
+  matrix[nyears,nobs] obs_dtm;
   
   vector[3] tlower;
   vector[3] tupper;
@@ -203,13 +203,13 @@ parameters {
   real<lower=0> sigma_dtm;      //Residual variance
 
 
-  real<lower=900,upper=1400> tth_g[nyears];        //Genome specific tth value
-  real<lower=900,upper=1400> tthm_g[nyears];        //Genome specific tth value
+  real<lower=700,upper=1400> tth_g[nyears];        //Genome specific tth value
+  real<lower=700,upper=1400> tthm_g[nyears];        //Genome specific tth value
 
 
-  real<lower=900, upper=1400> mu_tth;              //Mean of the tthpars
+  real<lower=700, upper=1400> mu_tth;              //Mean of the tthpars
   real<lower=0> sig_tth;    //sd of tthpars
-  real<lower=900, upper=1400> mu_tthm;              //Mean of the ttmpars
+  real<lower=700, upper=1400> mu_tthm;              //Mean of the ttmpars
   real<lower=0> sig_tthm;    //sd of ttmpars
 }
 
@@ -233,9 +233,9 @@ model {
   sigma_dth ~ uniform(0,40);
   sigma_dtm ~ uniform(0,40);
 
-  tmin ~ normal(tlower[1],tupper[1]);
-  topt ~ normal(tlower[2],tupper[2]);
-  tmax ~ normal(tlower[3],tupper[3]);
+  tmin ~ uniform(tlower[1],tupper[1]);
+  topt ~ uniform(tlower[2],tupper[2]);
+  tmax ~ uniform(tlower[3],tupper[3]);
   
   ppsen ~ uniform(20, 80);
 
