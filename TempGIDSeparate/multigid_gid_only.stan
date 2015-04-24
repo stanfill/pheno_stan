@@ -202,8 +202,8 @@ parameters {
   real<lower=0> sigma_dtm;      //Residual variance
 
 
-  real<lower=900,upper=1400> tth_g[nyears];        //Genome specific tth value
-  real<lower=900,upper=1400> tthm_g[nyears];        //Genome specific tth value
+  real<lower=800,upper=1400> tth_g[nyears];        //Genome specific tth value
+  real<lower=800,upper=1400> tthm_g[nyears];        //Genome specific tth value
 
 }
 

@@ -86,7 +86,7 @@ hot2013 <- redallDat[year==2013&temp=="Hot"];setkey(hot2013,GID)
 #The first index is temp/year combination
 #The second index is genotype (GID)
 #The third index is observations for that temp-by-GID combination
-ngids <- 2
+ngids <- 1
 gid_obs <- nrow(hot2011)/ngids
 
 dthArray <- array(0,c(6,ngids,gid_obs))
@@ -155,7 +155,7 @@ traceplot(fit)
 #Run one chain at a time
 
 multiGID_fit <- stan(file="TempGIDSeparate/multigid_gid_only.stan", data=pheno_dat_gid, algorithm="NUTS",
-                     init=initial_multigid,iter=1000, chains=2)
+                     init=initial_multigid,iter=500, chains=2)
 
 multiGID_fit <- stan(fit=multiGID_fit, data=pheno_dat_gid, algorithm="NUTS",
                      init=initial_multigid,iter=1000, chains=2)
