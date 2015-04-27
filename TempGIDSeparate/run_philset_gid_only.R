@@ -86,7 +86,7 @@ hot2013 <- redallDat[year==2013&temp=="Hot"];setkey(hot2013,GID)
 #The first index is temp/year combination
 #The second index is genotype (GID)
 #The third index is observations for that temp-by-GID combination
-ngids <- 1
+ngids <- 2
 gid_obs <- nrow(hot2011)/ngids
 
 dthArray <- array(0,c(6,ngids,gid_obs))
@@ -123,11 +123,11 @@ pheno_dat_gid <- list(ndays=ncol(weatherMat), nobs=gid_obs,ngid=ngids,
                       obs_tavg=weatherMat, doy = doyMat, obs_tmax=tMaxMat,
                       obs_dth=dthArray, obs_dtm=dtmArray,
                       tthLow=950, tthHigh=50,tthmLow=950, tthmHigh=50,
-                      tmin=0,topt=20,tmax=45)
+                      tmin=0,tmax=45,topt=28)
 nyears <- 6
 initial_multigid <- function(){
   list(sigma_dth=runif(1,3,10),sigma_dtm=runif(1,3,10),
-       tth_g=rnorm(nyears,1000,1),tthm_g=rnorm(nyears,1000,1),ppsen=runif(1,50,90))
+       tth_g=rnorm(ngids,1000,1),tthm_g=rnorm(ngids,1000,1),ppsen=runif(1,30,90))
 }
 
 
@@ -139,7 +139,7 @@ f1 <- stan(file="TempGIDSeparate/philset_gid_only.stan",data=pheno_dat_gid,
 seed <- 12345
 num_core  <-  2
 CL  <-  makeCluster(num_core, outfile = 'cluster.log')
-clusterExport(cl = CL, c("seed", "pheno_dat_gid","initial_multigid", "f1","nyears"))
+clusterExport(cl = CL, c("seed", "pheno_dat_gid","initial_multigid", "f1","ngids"))
 sflist1 <-parLapply(CL, 1:2,
                fun = function(i) {
                  require(rstan)

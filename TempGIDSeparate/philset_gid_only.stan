@@ -201,14 +201,14 @@ data {
 
 parameters {
   
+  //real<lower=20,upper=30> topt;
   real ppsen;
-
   real<lower=0> sigma_dth;      //Residual variance
   real<lower=0> sigma_dtm;      //Residual variance
 
 
-  real<lower=800,upper=1400> tth_g[nyears];        //Genome specific tth value
-  real<lower=800,upper=1400> tthm_g[nyears];        //Genome specific tth value
+  real<lower=800,upper=1400> tth_g[ngid];        //Genome specific tth value
+  real<lower=800,upper=1400> tthm_g[ngid];        //Genome specific tth value
 
 }
 
@@ -223,16 +223,16 @@ model {
   tthm_g ~ normal(tthmLow,tthmLow);              //Each tthm is assumed normal
 
   sigma_dth ~ uniform(0,40);
-  sigma_dtm ~ uniform(0,40);
+  sigma_dtm ~ uniform(0,50);
 
   
-  ppsen ~ uniform(20, 80);
-
+  ppsen ~ uniform(30, 95);
+  //topt ~ uniform(20,30);
 
   for(l in 1:nyears){
     for(n in 1:ngid){
 
-      mulk <- stan_pheno(obs_tavg[l], doy[l], obs_tmax[l], tmin, topt, tmax, tth_g[l],tthm_g[l], ppsen);
+      mulk <- stan_pheno(obs_tavg[l], doy[l], obs_tmax[l], tmin, topt, tmax, tth_g[n],tthm_g[n], ppsen);
 
       obs_dth[l,n] ~ normal(mulk[1],sigma_dth);
       obs_dtm[l,n] ~ normal(mulk[2],sigma_dtm);
