@@ -86,7 +86,7 @@ hot2013 <- redallDat[year==2013&temp=="Hot"];setkey(hot2013,GID)
 #The first index is temp/year combination
 #The second index is genotype (GID)
 #The third index is observations for that temp-by-GID combination
-ngids <- 2
+ngids <- 27
 gid_obs <- nrow(hot2011)/ngids
 
 dthArray <- array(0,c(6,ngids,gid_obs))
@@ -97,13 +97,6 @@ dthArray[4,,] <- matrix(hot2012$dth,nrow=ngids)
 dthArray[5,,] <- matrix(temp2013$dth,nrow=ngids)
 dthArray[6,,] <- matrix(hot2013$dth,nrow=ngids)
 
-dtmArray <- array(0,c(6,ngids,gid_obs))
-dtmArray[1,,] <- matrix(temp2011$dtm,nrow=ngids)
-dtmArray[2,,] <- matrix(hot2011$dtm,nrow=ngids)
-dtmArray[3,,] <- matrix(temp2012$dtm,nrow=ngids)
-dtmArray[4,,] <- matrix(hot2012$dtm,nrow=ngids)
-dtmArray[5,,] <- matrix(temp2013$dtm,nrow=ngids)
-dtmArray[6,,] <- matrix(hot2013$dtm,nrow=ngids)
 
 #Each row corresponds to a year/temp combination
 n_weatherObs <- 731
@@ -121,20 +114,19 @@ tMaxMat <- matrix(c(tmax2011[1:n_weatherObs],hmax2011[1:n_weatherObs],
 pheno_dat_gid <- list(ndays=ncol(weatherMat), nobs=gid_obs,ngid=ngids,
                       nyears=nrow(weatherMat),
                       obs_tavg=weatherMat, doy = doyMat, obs_tmax=tMaxMat,
-                      obs_dth=dthArray, obs_dtm=dtmArray,
-                      tthLow=950, tthHigh=50,tthmLow=950, tthmHigh=50,
-                      tmin=0,tmax=45,ppsen=30)
-nyears <- 6
+                      obs_dth=dthArray,
+                      tthLow=950, tthHigh=50,
+                      tmin=0,tmax=45,topt=24)
+
 initial_multigid <- function(){
-  list(sigma_dth=runif(1,3,10),sigma_dtm=runif(1,3,10),
-       tth_g=rnorm(ngids,1000,50),tthm_g=rnorm(ngids,1000,50),topt=runif(1,20,30))
+  list(sigma_dth=runif(1,3,10),tth_g=rnorm(ngids,1000,50),ppsen=rep(90,ngids))
 }
 
 
 ##########
 #Run two chains in parallel
 
-f1 <- stan(file="TempGIDSeparate/philset_gid_only.stan",data=pheno_dat_gid,
+f1 <- stan(file="TempGIDSeparate/philset_gid_dth_only.stan",data=pheno_dat_gid,
            init=initial_multigid,chains=1, iter=1)
 #seed <- 12345
 num_core  <-  2
@@ -144,7 +136,7 @@ sflist1 <-parLapply(CL, 1:2,
                fun = function(i) {
                  require(rstan)
                  stan(fit = f1, data = pheno_dat_gid, init=initial_multigid,
-                        chains = 1, chain_id = i, iter=5000, refresh = -1)
+                        chains = 1, chain_id = i, iter=2500, refresh = -1)
                  })
 fit <- sflist2stanfit(sflist1)
 stopCluster(CL)
@@ -156,7 +148,7 @@ traceplot(fit)
 ##########
 #Run one chain at a time
 
-multiGID_fit <- stan(file="TempGIDSeparate/philset_gid_only.stan", data=pheno_dat_gid, algorithm="NUTS",
+multiGID_fit <- stan(file="TempGIDSeparate/philset_gid_dth_only.stan", data=pheno_dat_gid, algorithm="NUTS",
                      init=initial_multigid,iter=500, chains=2)
 
 multiGID_fit <- stan(fit=multiGID_fit, data=pheno_dat_gid, algorithm="NUTS",

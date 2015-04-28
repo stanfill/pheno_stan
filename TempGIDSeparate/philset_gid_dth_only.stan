@@ -68,36 +68,28 @@ functions{
   }
 
 
-  vector stan_pheno(row_vector tavg, row_vector doy, row_vector obs_tmax, real tbase, real topt, real tmax, real tth, real tthm, real ppsen){
+  real stan_pheno(row_vector tavg, row_vector doy, row_vector obs_tmax, real tbase, real topt, real tmax, real tth, real ppsen){
     
     int n_obs;
     real ttcumadj;
     real z;
     int i;
-    vector[2] daysto;
+    real daystoh;
     real ttdaily;
-    real ttm;
   
     real dayl_fac;
 
     n_obs <- num_elements(tavg); //To protect against going too far in tavg vector
 
-    ttm <- tth+tthm;
     ttcumadj <- 0.0;
-    daysto[1] <- 0.0;
-    daysto[2] <- 0.0;
+    daystoh <- 0.0;
 
     i <- 1;
 
-    while(ttcumadj<ttm && i<n_obs){
+    while(ttcumadj<tth && i<n_obs){
       
-     if(ttcumadj<tth){
-        //Until heading is reached, adjust the daily tt for dayl and vern_fac
-        daysto[1] <- daysto[1]+1.0;
-      }
-
-      daysto[2] <- daysto[2]+1.0;
-
+      daystoh <- daystoh+1.0;
+      
       //Use the Triangle phenology model to calculate day i thermal time
       ttdaily <- triangle_pheno(tavg[i],tbase,topt,tmax);
 
@@ -111,7 +103,7 @@ functions{
       i <- i+1;
     }
 
-    return daysto;
+    return daystoh;
   
   }
 
@@ -129,15 +121,12 @@ data {
   matrix[nyears,ndays] obs_tmax;
 
   real obs_dth[nyears,ngid,nobs];
-  real obs_dtm[nyears,ngid,nobs];
   
   real tthLow;
   real tthHigh;
-  real tthmLow;
-  real tthmHigh;
 
-  real ppsen;
-  //real topt;
+  //real ppsen;
+  real topt;
 
   real tmin;
   real tmax;
@@ -146,14 +135,12 @@ data {
 
 parameters {
   
-  real<lower=20,upper=30> topt;
-  //real ppsen;
+  //real<lower=20,upper=30> topt;
+  vector[ngid] ppsen;
   real<lower=0> sigma_dth;      //Residual variance
-  real<lower=0> sigma_dtm;      //Residual variance
 
 
   real<lower=600,upper=1400> tth_g[ngid];        //Genome specific tth value
-  real<lower=600,upper=1400> tthm_g[ngid];        //Genome specific tth value
 
 }
 
@@ -162,25 +149,22 @@ model {
 
   //I don't actually care about the current estimate of dth or dtm so make them 
   //local variables that don't exist outside this code chunck
-  vector[2] mulk;
+  real dthHat;
 
   tth_g ~ normal(tthLow,tthHigh);
-  tthm_g ~ normal(tthmLow,tthmLow);              //Each tthm is assumed normal
 
   sigma_dth ~ uniform(0,40);
-  sigma_dtm ~ uniform(0,70);
 
   
-  //ppsen ~ uniform(30, 95);
-  topt ~ uniform(20,30);
+  ppsen ~ uniform(30, 95);
+  //topt ~ uniform(20,30);
 
   for(l in 1:nyears){
     for(n in 1:ngid){
 
-      mulk <- stan_pheno(obs_tavg[l], doy[l], obs_tmax[l], tmin, topt, tmax, tth_g[n],tthm_g[n], ppsen);
+      dthHat <- stan_pheno(obs_tavg[l], doy[l], obs_tmax[l], tmin, topt, tmax, tth_g[n], ppsen[n]);
 
-      obs_dth[l,n] ~ normal(mulk[1],sigma_dth);
-      obs_dtm[l,n] ~ normal(mulk[2],sigma_dtm);
+      obs_dth[l,n] ~ normal(dthHat,sigma_dth);
 
     }
   }
