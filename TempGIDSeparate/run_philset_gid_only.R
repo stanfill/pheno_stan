@@ -123,11 +123,11 @@ pheno_dat_gid <- list(ndays=ncol(weatherMat), nobs=gid_obs,ngid=ngids,
                       obs_tavg=weatherMat, doy = doyMat, obs_tmax=tMaxMat,
                       obs_dth=dthArray, obs_dtm=dtmArray,
                       tthLow=950, tthHigh=50,tthmLow=950, tthmHigh=50,
-                      tmin=0,tmax=45,ppsen=30)
+                      tmin=0,tmax=45,topt=28)
 nyears <- 6
 initial_multigid <- function(){
   list(sigma_dth=runif(1,3,10),sigma_dtm=runif(1,3,10),
-       tth_g=rnorm(ngids,1000,50),tthm_g=rnorm(ngids,1000,50),topt=runif(1,20,30))
+       tth_g=rnorm(ngids,1000,50),tthm_g=rnorm(ngids,1000,50),ppsen=runif(ngids,90,90))
 }
 
 
@@ -144,7 +144,7 @@ sflist1 <-parLapply(CL, 1:2,
                fun = function(i) {
                  require(rstan)
                  stan(fit = f1, data = pheno_dat_gid, init=initial_multigid,
-                        chains = 1, chain_id = i, iter=5000, refresh = -1)
+                        chains = 1, chain_id = i, iter=500, refresh = -1)
                  })
 fit <- sflist2stanfit(sflist1)
 stopCluster(CL)
