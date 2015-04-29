@@ -119,7 +119,7 @@ pheno_dat_gid <- list(ndays=ncol(weatherMat), nobs=gid_obs,ngid=ngids,
                       tmin=0,tmax=45,topt=24)
 
 initial_multigid <- function(){
-  list(sigma_dth=runif(1,3,10),tth_g=rnorm(ngids,1000,50),ppsen=rep(90,ngids))
+  list(sigma_dth=runif(1,3,10),tth_g=rnorm(ngids,1000,50),ppsen=90)
 }
 
 

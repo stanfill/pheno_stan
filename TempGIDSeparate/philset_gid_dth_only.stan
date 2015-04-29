@@ -136,7 +136,7 @@ data {
 parameters {
   
   //real<lower=20,upper=30> topt;
-  vector[ngid] ppsen;
+  real ppsen;
   real<lower=0> sigma_dth;      //Residual variance
 
 
@@ -162,7 +162,7 @@ model {
   for(l in 1:nyears){
     for(n in 1:ngid){
 
-      dthHat <- stan_pheno(obs_tavg[l], doy[l], obs_tmax[l], tmin, topt, tmax, tth_g[n], ppsen[n]);
+      dthHat <- stan_pheno(obs_tavg[l], doy[l], obs_tmax[l], tmin, topt, tmax, tth_g[n], ppsen);
 
       obs_dth[l,n] ~ normal(dthHat,sigma_dth);
 
