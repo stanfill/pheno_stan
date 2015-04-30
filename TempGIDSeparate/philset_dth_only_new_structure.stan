@@ -121,8 +121,8 @@ data {
   matrix[nyears,ndays] obs_tmax;
 
   vector[nobs] obs_dth;
-  vector[nobs] year_temp;
-  vector[nobs] gidgp;
+  int year_temp[nobs];
+  int gidgp[nobs];
   
   real tthLow;
   real tthHigh;
