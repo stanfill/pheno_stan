@@ -127,7 +127,6 @@ data {
   real tthLow;
   real tthHigh;
 
-  //real ppsen;
   real topt;
 
   real tmin;
@@ -137,12 +136,16 @@ data {
 
 parameters {
   
-  //real<lower=20,upper=30> topt;
   vector[ngid] ppsen;
-  real<lower=0> sigma_dth;      //Residual variance
-
+  real mu_ppsen;
+  real<lower=0> sigma_ppsen;
 
   real<lower=600,upper=1400> tth_g[ngid];        //Genome specific tth value
+  real<lower=600,upper=1400> mu_tth;
+  real<lower=0> sigma_tth;
+
+  real<lower=0> sigma_dth;      //Residual variance
+
 
 }
 
@@ -153,13 +156,15 @@ model {
   //local variables that don't exist outside this code chunck
 
   matrix[nyears,ngid] dthHat;
-  tth_g ~ normal(tthLow,tthHigh);
+  mu_tth ~ normal(tthLow,tthHigh);
+  sigma_tth ~ uniform(0,15);
+  tth_g ~ normal(mu_tth,sigma_tth);
 
   sigma_dth ~ uniform(0,40);
 
-  
-  ppsen ~ uniform(30, 95);
-  //topt ~ uniform(20,30);
+  mu_ppsen ~ uniform(30,90);
+  sigma_ppsen ~ uniform(0,15);
+  ppsen ~ normal(mu_ppsen, sigma_ppsen);
 
   for(l in 1:nyears){
     for(n in 1:ngid){

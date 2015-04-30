@@ -60,7 +60,7 @@ hdoy2013 <- as.POSIXlt(weather_heat_2013$date)$yday + 1
 
 ####################
 #Combine all of the year/temp. combinations
-allDat <- rbind(temperate2011,heat2011,temperate2012,heat2012,temperate2013,heat2013)
+allDat <- rbind(heat2011,temperate2011,heat2012,temperate2012,heat2013,temperate2013)
 allDat <- as.data.table(na.omit(allDat))
 setkey(allDat,GID,year,temp)
 #table(allDat$GID)
@@ -109,7 +109,8 @@ pheno_dat_gid <- list(ndays=ncol(tavgMat), nobs=nrow(allDat),ngid=ngids,
                       tmin=0,tmax=45,topt=28)
 
 initial_multigid <- function(){
-  list(sigma_dth=runif(1,3,10),tth_g=rnorm(ngids,1000,25),ppsen=rep(70,ngids))
+  list(sigma_dth=runif(1,3,10),tth_g=rnorm(ngids,1000,25),ppsen=rep(90,ngids),
+       mu_ppsen=90,sigma_ppsen=4,mu_tth=900,sigma_tth=3)
 }
 
 
@@ -118,6 +119,7 @@ initial_multigid <- function(){
 
 f1 <- stan(file="TempGIDSeparate/philset_dth_only_new_structure.stan",data=pheno_dat_gid,
            init=initial_multigid,chains=1, iter=1)
+f1
 #seed <- 12345
 num_core  <-  2
 CL  <-  makeCluster(num_core, outfile = 'cluster.log')
@@ -126,7 +128,7 @@ sflist1 <-parLapply(CL, 1:2,
                fun = function(i) {
                  require(rstan)
                  stan(fit = f1, data = pheno_dat_gid, init=initial_multigid,
-                        chains = 1, chain_id = i, iter=500, refresh = -1)
+                        chains = 1, chain_id = i, iter=2000, refresh = -1)
                  })
 fit <- sflist2stanfit(sflist1)
 stopCluster(CL)
