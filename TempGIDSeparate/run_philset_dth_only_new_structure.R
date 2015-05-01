@@ -68,8 +68,8 @@ setkey(allDat,GID,year,temp)
 ####################
 #Use classification tree results to create GID groups
 G1GID <- c("GID6056245", "GID6171893", "GID6174886", "GID6175172", "GID6176178", "GID6176346", "GID6176523", "GID6177599", "GID6179253", "GID6179559")
-G2GID <- c("GID16122",   "GID2465",    "GID3895",    "GID5390612", "GID5398160", "GID5999777", "GID6000921", "GID6175024", "GID6178401", "GID6178783")
-G3GID <- c("GID4556647", "GID5077000", "GID5325839", "GID5343246", "GID5397958", "GID5423688", "GID5995410", "GID6179128", "GID6179222", "GID775") 
+G2GID <- c("GID16122",   "GID2465",    "GID3895", "GID5398160", "GID5999777", "GID6000921", "GID6175024", "GID6178401", "GID6178783")
+G3GID <- c("GID4556647", "GID5077000", "GID5325839","GID5390612", "GID5343246", "GID5397958", "GID5423688", "GID5995410", "GID6179128", "GID6179222", "GID775") 
 
 allDat$GIDgp <- 1
 allDat[GID%in%G2GID,]$GIDgp <- 2
@@ -109,7 +109,7 @@ pheno_dat_gid <- list(ndays=ncol(tavgMat), nobs=nrow(allDat),ngid=ngids,
                       tmin=0,tmax=45,topt=28)
 
 initial_multigid <- function(){
-  list(sigma_dth=runif(1,3,10),tth_g=rnorm(ngids,1000,25),ppsen=rep(90,ngids),
+  list(sigma_dth=runif(1,3,10),tth_g=rnorm(ngids,900,25),ppsen=rep(90,ngids),
        mu_ppsen=90,sigma_ppsen=4,mu_tth=900,sigma_tth=3)
 }
 
@@ -128,7 +128,7 @@ sflist1 <-parLapply(CL, 1:2,
                fun = function(i) {
                  require(rstan)
                  stan(fit = f1, data = pheno_dat_gid, init=initial_multigid,
-                        chains = 1, chain_id = i, iter=2000, refresh = -1)
+                        chains = 1, chain_id = i, iter=10000, refresh = -1)
                  })
 fit <- sflist2stanfit(sflist1)
 stopCluster(CL)

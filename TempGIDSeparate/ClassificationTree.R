@@ -36,8 +36,8 @@ text(ptres, use.n=TRUE, all=TRUE, cex=.8)
 
 
 G1GID <- levels(temperatedat$GID)[c(15,16,17,19,20,21,22,23,28,29)]
-G2GID <- levels(temperatedat$GID)[c(1,2,3,8,10,13,14,18,24,25)]
-G3GID <- levels(temperatedat$GID)[c(4,5,6,7,9,11,12,26,27,30)]
+G2GID <- levels(temperatedat$GID)[c(1,2,3,10,13,14,18,24,25)]
+G3GID <- levels(temperatedat$GID)[c(4,5,6,7,8,9,11,12,26,27,30)]
 
 
 
