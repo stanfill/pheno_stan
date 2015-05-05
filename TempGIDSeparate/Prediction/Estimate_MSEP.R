@@ -1,12 +1,18 @@
 library(rstan)
-library(simplepheno)
-load("Z:/bragg_pheno_stan/Results/Sep_GID_One_PPSEN_Topt_2500.RData")
-source('TempGIDSeparate/Prediction/FastPhenoFun.R')
+load("~/PhilCollaboration/stan_results/TestResults_GID_Grouped.RData")
 
 simDf <- as.data.frame(fit)
-N_draws <- nrow(simMat)
+nDraws <- nrow(simDf)
 
-tthcols <- grep("tth_g",colnames(simDf))
+estDth <- grep("dthHat",colnames(simDf))
 
-meani <- matrix(0,N_draws,ngids)
+residsMat <- matrix(0,nDraws,pheno_dat_gid$nobs)
+obsMat <- data.frame(dth=pheno_dat_gid$obs_dth,year_t=pheno_dat_gid$year_temp,gidgp=pheno_dat_gid$gidgp)
 
+for(i in 1:nDraws){
+  dthEstMat <- matrix(data.matrix(simDf[i,estDth]),nrow=pheno_dat_gid$nyears)
+  residsMat[i,] <- obsMat$dth- dthEstMat[cbind(obsMat$year_t,obsMat$gidgp)]
+  
+}
+
+head(residsMat[,1:10])
