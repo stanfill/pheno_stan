@@ -144,20 +144,9 @@ parameters {
 
 }
 
+transformed parameters{
 
-model {
-
-  //I don't actually care about the current estimate of dth or dtm so make them 
-  //local variables that don't exist outside this code chunck
-
-  matrix[nyears,ngid] dthHat;
-  tth_g ~ normal(tthLow,tthHigh);
-
-  sigma_dth ~ uniform(0,40);
-
-  topt ~ normal(26,1);
-  
-  ppsen ~ uniform(30, 90);
+    matrix[nyears,ngid] dthHat;
 
   for(l in 1:nyears){
     for(n in 1:ngid){
@@ -166,6 +155,18 @@ model {
 
     }
   }
+
+}
+
+model {
+
+  tth_g ~ normal(tthLow,tthHigh);
+
+  sigma_dth ~ uniform(0,40);
+
+  topt ~ normal(26,1);
+  
+  ppsen ~ uniform(30, 90);
 
   for(i in 1:nobs)
     obs_dth[i] ~ normal(dthHat[year_temp[i],gidgp[i]],sigma_dth);

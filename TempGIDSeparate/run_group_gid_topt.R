@@ -117,7 +117,7 @@ initial_multigid <- function(){
 ##########
 #Run two chains in parallel
 
-f1 <- stan(file="TempGIDSeparate/philset_dth_only_new_structure.stan",data=pheno_dat_gid,
+f1 <- stan(file="TempGIDSeparate/sep_gid_topt.stan",data=pheno_dat_gid,
            init=initial_multigid,chains=1, iter=1)
 f1
 #seed <- 12345
