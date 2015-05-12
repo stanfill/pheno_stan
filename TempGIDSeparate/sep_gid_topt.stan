@@ -134,7 +134,7 @@ data {
 
 parameters {
   
-  vector[ngid] ppsen;
+  real ppsen;
   real<lower=600,upper=1400> tth_g[ngid];        //Genome specific tth value
 
 
@@ -151,7 +151,7 @@ transformed parameters{
   for(l in 1:nyears){
     for(n in 1:ngid){
 
-      dthHat[l,n] <- stan_pheno(obs_tavg[l], doy[l], obs_tmax[l], tmin, topt, tmax, tth_g[n], ppsen[n]);
+      dthHat[l,n] <- stan_pheno(obs_tavg[l], doy[l], obs_tmax[l], tmin, topt, tmax, tth_g[n], ppsen);
 
     }
   }

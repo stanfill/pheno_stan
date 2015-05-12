@@ -67,13 +67,19 @@ setkey(allDat,GID,year,temp)
 
 ####################
 #Use classification tree results to create GID groups
-G1GID <- c("GID6056245", "GID6171893", "GID6174886", "GID6175172", "GID6176178", "GID6176346", "GID6176523", "GID6177599", "GID6179253", "GID6179559")
-G2GID <- c("GID16122",   "GID2465",    "GID3895", "GID5398160", "GID5999777", "GID6000921", "GID6175024", "GID6178401", "GID6178783")
-G3GID <- c("GID4556647", "GID5077000", "GID5325839","GID5390612", "GID5343246", "GID5397958", "GID5423688", "GID5995410", "GID6179128", "GID6179222", "GID775") 
+#G1GID <- c("GID6056245", "GID6171893", "GID6174886", "GID6175172", "GID6176178", "GID6176346", "GID6176523", "GID6177599", "GID6179253", "GID6179559")
+#G2GID <- c("GID16122",   "GID2465",    "GID3895", "GID5398160", "GID5999777", "GID6000921", "GID6175024", "GID6178401", "GID6178783")
+#G3GID <- c("GID4556647", "GID5077000", "GID5325839","GID5390612", "GID5343246", "GID5397958", "GID5423688", "GID5995410", "GID6179128", "GID6179222", "GID775") 
 
-allDat$GIDgp <- 1
-allDat[GID%in%G2GID,]$GIDgp <- 2
-allDat[GID%in%G3GID,]$GIDgp <- 3
+#allDat$GIDgp <- 1
+#allDat[GID%in%G2GID,]$GIDgp <- 2
+#allDat[GID%in%G3GID,]$GIDgp <- 3
+
+#Each GID its own group
+allDat$GIDgp <- factor(allDat$GID)
+levels(allDat$GIDgp) <- 1:length(unique(allDat$GIDgp))
+allDat$GIDgp <- as.numeric(as.character(allDat$GIDgp))
+
 
 ngids <- max(allDat$GIDgp)
 ####################
@@ -109,7 +115,7 @@ pheno_dat_gid <- list(ndays=ncol(tavgMat), nobs=nrow(allDat),ngid=ngids,
                       tmin=0,tmax=45)
 
 initial_multigid <- function(){
-  list(sigma_dth=runif(1,3,10),tth_g=rnorm(ngids,900,25),ppsen=rep(90,ngids),
+  list(sigma_dth=runif(1,3,10),tth_g=rnorm(ngids,900,25),ppsen=50,
        topt=runif(1,25,28))
 }
 
