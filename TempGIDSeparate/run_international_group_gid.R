@@ -67,6 +67,7 @@ setkey(allDat,GID,year,temp)
 
 ####################
 #Use international dataset to create GID groups
+#Five Groups
 G1GID <- c("GID6056245", "GID6171893")
 G2GID <- c("GID5999777","GID16122","GID5397958","GID6178783","GID6178401","GID2465","GID6179222","GID6000921",
            "GID6179128","GID5423688","GID5995410","GID5325839","GID5398160")
@@ -74,19 +75,36 @@ G3GID <- c("GID6176523","GID6177599","GID6176178")
 G4GID <- c("GID6174886","GID5077000","GID3895","GID6175024","GID6176346","GID6175172","GID6179559","GID6179253")
 G5GID <- c("GID5343246","GID4556647","GID5390612","GID775")
            
-allDat$GIDgp <- 0
-allDat[GID%in%G1GID,]$GIDgp <- 1
-allDat[GID%in%G2GID,]$GIDgp <- 2
-allDat[GID%in%G3GID,]$GIDgp <- 3
-allDat[GID%in%G4GID,]$GIDgp <- 4
-allDat[GID%in%G5GID,]$GIDgp <- 5
+allDat$GIDgp5 <- 0
+allDat[GID%in%G1GID,]$GIDgp5 <- 1
+allDat[GID%in%G2GID,]$GIDgp5 <- 2
+allDat[GID%in%G3GID,]$GIDgp5 <- 3
+allDat[GID%in%G4GID,]$GIDgp5 <- 4
+allDat[GID%in%G5GID,]$GIDgp5 <- 5
+
+#Six Groups
+G1GID <- c("GID5397958","GID6178401","GID6179128","GID5423688","GID5325839","GID5398160")
+G2GID <- c("GID5999777","GID16122","GID6178783","GID2465","GID6179222","GID6000921","GID5995410")
+G3GID <- c("GID6174886","GID5077000","GID3895","GID6175024","GID6176346","GID6175172","GID6179559","GID6179253")
+G4GID <- c("GID5343246","GID4556647","GID5390612","GID775")
+G5GID <- c("GID6176523","GID6177599","GID6176178")
+G6GID <- c("GID6056245", "GID6171893")
+
+
+allDat$GIDgp6 <- 0
+allDat[GID%in%G1GID,]$GIDgp6 <- 1
+allDat[GID%in%G2GID,]$GIDgp6 <- 2
+allDat[GID%in%G3GID,]$GIDgp6 <- 3
+allDat[GID%in%G4GID,]$GIDgp6 <- 4
+allDat[GID%in%G5GID,]$GIDgp6 <- 5
+allDat[GID%in%G6GID,]$GIDgp6 <- 6
 
 #Each GID its own group
-#allDat$GIDgp <- factor(allDat$GID)
-#levels(allDat$GIDgp) <- 1:length(unique(allDat$GIDgp))
-#allDat$GIDgp <- as.numeric(as.character(allDat$GIDgp))
+allDat$GIDgp <- factor(allDat$GID)
+levels(allDat$GIDgp) <- 1:length(unique(allDat$GIDgp))
+allDat$GIDgp <- as.numeric(as.character(allDat$GIDgp))
+ngids <- max(allDat$GIDgp6)
 
-ngids <- max(allDat$GIDgp)
 ####################
 #Create year_temp groups
 allDat$year_temp <- 1 #Hot 2011
@@ -95,6 +113,18 @@ allDat[year==2012&temp=="Hot"]$year_temp <- 3 #Hot 2012
 allDat[year==2012&temp!="Hot"]$year_temp <- 4 #Temperate 2012
 allDat[year==2013&temp=="Hot"]$year_temp <- 5 #Hot 2013
 allDat[year==2013&temp!="Hot"]$year_temp <- 6 #Temperate 2013
+
+####################
+#Average over multiple observations, help?
+library(plyr)
+allDatAvg <- ddply(allDat,.(year,temp,GID),summarize,dth=mean(dth),dtm=mean(dtm),year_temp=mean(year_temp),
+                   GIDgp=mean(GIDgp6))
+table(allDatAvg$year_temp)
+table(allDatAvg$GIDgp)
+
+dim(allDatAvg)
+allDat <- allDatAvg
+ngids <- max(allDat$GIDgp)
 
 ####################
 #Create average temp, day of year (doy) and max temp matrix
@@ -127,8 +157,9 @@ initial_multigid <- function(){
 ##########
 #Run two chains in parallel
 
-f1 <- stan(file="TempGIDSeparate/international_group_gid.stan",data=pheno_dat_gid,
-           init=initial_multigid,chains=1, iter=1)
+stanFile <- "TempGIDSeparate/international_group_gid.stan"
+f1 <- stan(file=stanFile,data=pheno_dat_gid,
+           init=initial_multigid,chains=1, iter=100)
 f1
 #seed <- 12345
 num_core  <-  2
