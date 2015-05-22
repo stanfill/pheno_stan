@@ -158,8 +158,7 @@ initial_multigid <- function(){
 #Run two chains in parallel
 
 stanFile <- "TempGIDSeparate/international_group_gid.stan"
-f1 <- stan(file=stanFile,data=pheno_dat_gid,
-           init=initial_multigid,chains=1, iter=100)
+f1 <- stan(file=stanFile,data=pheno_dat_gid, init=initial_multigid,chains=1, iter=100)
 f1
 #seed <- 12345
 num_core  <-  2
@@ -169,7 +168,7 @@ sflist1 <-parLapply(CL, 1:2,
                fun = function(i) {
                  require(rstan)
                  stan(fit = f1, data = pheno_dat_gid, init=initial_multigid,
-                        chains = 1, chain_id = i, iter=2000, refresh = -1)
+                        chains = 1, chain_id = i, iter=2500, refresh = -1)
                  })
 fit <- sflist2stanfit(sflist1)
 stopCluster(CL)

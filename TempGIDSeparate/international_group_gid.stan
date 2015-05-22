@@ -164,8 +164,14 @@ model {
   
   ppsen ~ uniform(30, 90);
 
-  for(i in 1:nobs)
-    obs_dth[i] ~ normal(dthHat[year_temp[i],gidgp[i]],sigma_dth);
+  {
+    real dthHati[nobs];
 
+    for(i in 1:nobs)
+      dthHati[i] <- dthHat[year_temp[i],gidgp[i]];
+  
 
+    obs_dth ~ normal(dthHati,sigma_dth);  
+
+  }
 }
