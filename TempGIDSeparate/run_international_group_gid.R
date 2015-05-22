@@ -98,12 +98,12 @@ allDat[GID%in%G3GID,]$GIDgp6 <- 3
 allDat[GID%in%G4GID,]$GIDgp6 <- 4
 allDat[GID%in%G5GID,]$GIDgp6 <- 5
 allDat[GID%in%G6GID,]$GIDgp6 <- 6
-
+allDat$GIDgp <- allDat$GIDgp6
 #Each GID its own group
-allDat$GIDgp <- factor(allDat$GID)
-levels(allDat$GIDgp) <- 1:length(unique(allDat$GIDgp))
-allDat$GIDgp <- as.numeric(as.character(allDat$GIDgp))
-ngids <- max(allDat$GIDgp6)
+#allDat$GIDgp <- factor(allDat$GID)
+#levels(allDat$GIDgp) <- 1:length(unique(allDat$GIDgp))
+#allDat$GIDgp <- as.numeric(as.character(allDat$GIDgp))
+ngids <- max(allDat$GIDgp)
 
 ####################
 #Create year_temp groups
@@ -116,15 +116,15 @@ allDat[year==2013&temp!="Hot"]$year_temp <- 6 #Temperate 2013
 
 ####################
 #Average over multiple observations, help?
-library(plyr)
-allDatAvg <- ddply(allDat,.(year,temp,GID),summarize,dth=mean(dth),dtm=mean(dtm),year_temp=mean(year_temp),
-                   GIDgp=mean(GIDgp6))
-table(allDatAvg$year_temp)
-table(allDatAvg$GIDgp)
-
-dim(allDatAvg)
-allDat <- allDatAvg
-ngids <- max(allDat$GIDgp)
+# library(plyr)
+# allDatAvg <- ddply(allDat,.(year,temp,GID),summarize,dth=mean(dth),dtm=mean(dtm),year_temp=mean(year_temp),
+#                    GIDgp=mean(GIDgp6))
+# table(allDatAvg$year_temp)
+# table(allDatAvg$GIDgp)
+# 
+# dim(allDatAvg)
+# allDat <- allDatAvg
+# ngids <- max(allDat$GIDgp)
 
 ####################
 #Create average temp, day of year (doy) and max temp matrix
@@ -150,7 +150,7 @@ pheno_dat_gid <- list(ndays=ncol(tavgMat), nobs=nrow(allDat),ngid=ngids,
                       tmin=0,topt=26,tmax=45)
 
 initial_multigid <- function(){
-  list(sigma_dth=runif(1,3,10),tth_g=rnorm(ngids,900,25),ppsen=50)
+  list(sigma_dth=runif(1,3,10),tth_g=rnorm(ngids,1058,25),ppsen=90)
 }
 
 
@@ -168,7 +168,7 @@ sflist1 <-parLapply(CL, 1:2,
                fun = function(i) {
                  require(rstan)
                  stan(fit = f1, data = pheno_dat_gid, init=initial_multigid,
-                        chains = 1, chain_id = i, iter=2500, refresh = -1)
+                        chains = 1, chain_id = i, iter=1000, refresh = -1)
                  })
 fit <- sflist2stanfit(sflist1)
 stopCluster(CL)

@@ -135,11 +135,11 @@ data {
 
 parameters {
   
-  real ppsen;
+  real<lower=30, upper=100> ppsen;
   real<lower=600,upper=1400> tth_g[ngid];        //Genome specific tth value
 
 
-  real<lower=0> sigma_dth;      //Residual variance
+  real<lower=0, upper=100> sigma_dth;      //Residual variance
 }
 
 transformed parameters{
@@ -160,9 +160,9 @@ model {
 
   tth_g ~ normal(tthLow,tthHigh);
 
-  sigma_dth ~ uniform(0,40);
+  sigma_dth ~ uniform(0,100);
   
-  ppsen ~ uniform(30, 90);
+  ppsen ~ uniform(30, 100);
 
   {
     real dthHati[nobs];
